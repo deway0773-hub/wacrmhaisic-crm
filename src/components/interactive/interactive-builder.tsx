@@ -102,29 +102,29 @@ export function InteractiveBuilder({
           <div className="flex gap-2">
             <KindButton
               active={value.kind === "buttons"}
-              label="Reply buttons"
+              label="回复按钮"
               onClick={() => switchKind("buttons")}
             />
             <KindButton
               active={value.kind === "list"}
-              label="List"
+              label="列表"
               onClick={() => switchKind("list")}
             />
           </div>
 
-          <Field label="Body" counter={`${value.body.length}/${INTERACTIVE_LIMITS.bodyMaxLength}`}>
+          <Field label="正文" counter={`${value.body.length}/${INTERACTIVE_LIMITS.bodyMaxLength}`}>
             <Textarea
               value={value.body}
               maxLength={INTERACTIVE_LIMITS.bodyMaxLength}
               onChange={(e) => setField({ body: e.target.value })}
-              placeholder="What the customer reads above the options"
+              placeholder="客户在选项上方看到的内容"
               className="min-h-20 bg-muted text-foreground"
             />
           </Field>
 
           <div className="grid grid-cols-2 gap-2">
             <Field
-              label="Header (optional)"
+              label="头部（可选）"
               counter={`${(value.header ?? "").length}/${INTERACTIVE_LIMITS.headerTextMaxLength}`}
             >
               <Input
@@ -135,7 +135,7 @@ export function InteractiveBuilder({
               />
             </Field>
             <Field
-              label="Footer (optional)"
+              label="页脚（可选）"
               counter={`${(value.footer ?? "").length}/${INTERACTIVE_LIMITS.footerMaxLength}`}
             >
               <Input
@@ -160,7 +160,7 @@ export function InteractiveBuilder({
               onChange={(e) => setAdvanced(e.target.checked)}
               className="h-3.5 w-3.5 accent-primary"
             />
-            Show reply IDs (advanced)
+            显示回复 ID（高级）
           </label>
 
           {!validation.ok && (
@@ -171,7 +171,7 @@ export function InteractiveBuilder({
         {showPreview && (
           <div className="flex shrink-0 flex-col gap-1.5 @2xl:w-[280px]">
             <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              Preview
+              预览
             </span>
             <div className="rounded-lg bg-muted/40 p-3">
               <InteractivePreview payload={value} />
@@ -216,7 +216,7 @@ function ButtonsEditor({
   return (
     <div>
       <label className="mb-2 block text-xs text-muted-foreground">
-        Buttons ({buttons.length}/{INTERACTIVE_LIMITS.maxButtons})
+        按钮（{buttons.length}/{INTERACTIVE_LIMITS.maxButtons}）
       </label>
       <div className="flex flex-col gap-2">
         {buttons.map((b, i) => (
@@ -236,7 +236,7 @@ function ButtonsEditor({
               value={b.title}
               maxLength={INTERACTIVE_LIMITS.buttonTitleMaxLength}
               onChange={(e) => update(i, { title: e.target.value })}
-              placeholder="Button label"
+              placeholder="按钮标签"
               className="flex-1 bg-muted"
             />
             <span className="w-10 shrink-0 text-right text-[10px] text-muted-foreground">
@@ -258,7 +258,7 @@ function ButtonsEditor({
       {buttons.length < INTERACTIVE_LIMITS.maxButtons && (
         <Button variant="ghost" size="sm" onClick={add} className="mt-2">
           <Plus className="h-3.5 w-3.5" />
-          Add button
+          添加按钮
         </Button>
       )}
     </div>
@@ -329,7 +329,7 @@ function ListEditor({
 
   return (
     <div className="flex flex-col gap-3">
-      <Field label="List button label" counter={`${value.button_label.length}/${INTERACTIVE_LIMITS.buttonTitleMaxLength}`}>
+      <Field label="列表按钮标签" counter={`${value.button_label.length}/${INTERACTIVE_LIMITS.buttonTitleMaxLength}`}>
         <Input
           value={value.button_label}
           maxLength={INTERACTIVE_LIMITS.buttonTitleMaxLength}
@@ -339,7 +339,7 @@ function ListEditor({
       </Field>
 
       <label className="block text-xs text-muted-foreground">
-        Rows ({totalRows}/{INTERACTIVE_LIMITS.maxListRowsTotal})
+        行（{totalRows}/{INTERACTIVE_LIMITS.maxListRowsTotal}）
       </label>
 
       {sections.map((section, sIdx) => (
@@ -348,7 +348,7 @@ function ListEditor({
             <Input
               value={section.title ?? ""}
               onChange={(e) => updateSection(sIdx, { title: e.target.value })}
-              placeholder="Section title (optional)"
+              placeholder="部分标题（可选）"
               className="flex-1 bg-muted text-xs"
             />
             {sections.length > 1 && (
@@ -380,7 +380,7 @@ function ListEditor({
                     value={row.title}
                     maxLength={INTERACTIVE_LIMITS.listRowTitleMaxLength}
                     onChange={(e) => updateRow(sIdx, rIdx, { title: e.target.value })}
-                    placeholder="Row title"
+                    placeholder="行标题"
                     className="flex-1 bg-muted"
                   />
                   <span className="w-10 shrink-0 text-right text-[10px] text-muted-foreground">
@@ -401,7 +401,7 @@ function ListEditor({
                   value={row.description ?? ""}
                   maxLength={INTERACTIVE_LIMITS.listRowDescriptionMaxLength}
                   onChange={(e) => updateRow(sIdx, rIdx, { description: e.target.value })}
-                  placeholder="Description (optional)"
+                  placeholder="描述（可选）"
                   className="mt-2 bg-muted text-xs"
                 />
               </div>
@@ -410,7 +410,7 @@ function ListEditor({
           {totalRows < INTERACTIVE_LIMITS.maxListRowsTotal && (
             <Button variant="ghost" size="sm" onClick={() => addRow(sIdx)} className="mt-2">
               <Plus className="h-3.5 w-3.5" />
-              Add row
+              添加行
             </Button>
           )}
         </div>
@@ -420,7 +420,7 @@ function ListEditor({
         totalRows < INTERACTIVE_LIMITS.maxListRowsTotal && (
           <Button variant="ghost" size="sm" onClick={addSection}>
             <Plus className="h-3.5 w-3.5" />
-            Add section
+            添加部分
           </Button>
         )}
     </div>

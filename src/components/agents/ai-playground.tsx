@@ -43,9 +43,9 @@ export function AiPlayground({ onGoToSetup }: { onGoToSetup?: () => void }) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (data.code === 'ai_not_configured') {
-          toast.error('No agent configured yet — finish Setup first.');
+          toast.error('尚未配置智能体，请先完成设置。');
         } else {
-          toast.error(data.error ?? "Couldn't get a reply.");
+          toast.error(data.error ?? '未能获取回复。');
         }
         // Roll the unsent user turn back so the transcript stays clean.
         setTurns(turns);
@@ -64,7 +64,7 @@ export function AiPlayground({ onGoToSetup }: { onGoToSetup?: () => void }) {
         },
       ]);
     } catch {
-      toast.error("Couldn't reach the agent.");
+      toast.error('无法连接到智能体。');
       setTurns(turns);
       setInput(text);
     } finally {
@@ -85,9 +85,9 @@ export function AiPlayground({ onGoToSetup }: { onGoToSetup?: () => void }) {
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <Bot className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium text-foreground">Playground</span>
+          <span className="text-sm font-medium text-foreground">测试区</span>
           <span className="text-xs text-muted-foreground">
-            — test replies as if you were a customer
+            — 像客户一样测试回复
           </span>
         </div>
         <Button
@@ -97,7 +97,7 @@ export function AiPlayground({ onGoToSetup }: { onGoToSetup?: () => void }) {
           disabled={turns.length === 0 || sending}
           className="text-muted-foreground"
         >
-          <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> Reset
+          <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> 重置
         </Button>
       </div>
 
@@ -106,10 +106,9 @@ export function AiPlayground({ onGoToSetup }: { onGoToSetup?: () => void }) {
         {turns.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center text-center text-sm text-muted-foreground">
             <Bot className="mb-2 h-8 w-8 text-muted-foreground/60" />
-            <p>Send a message to see how your agent would reply.</p>
+            <p>发送消息，查看你的智能体会如何回复。</p>
             <p className="mt-1 text-xs">
-              It uses your knowledge base and behaves exactly like the
-              auto-reply bot — including handoff.
+              它会使用你的知识库，行为与自动回复机器人完全一致，包括转交人工客服。
             </p>
             {onGoToSetup && (
               <Button
@@ -118,7 +117,7 @@ export function AiPlayground({ onGoToSetup }: { onGoToSetup?: () => void }) {
                 onClick={onGoToSetup}
                 className="mt-1 h-auto p-0 text-xs"
               >
-                Not set up yet? Go to Setup <ArrowRight className="ml-1 h-3 w-3" />
+                尚未设置？前往设置 <ArrowRight className="ml-1 h-3 w-3" />
               </Button>
             )}
           </div>
@@ -152,7 +151,7 @@ export function AiPlayground({ onGoToSetup }: { onGoToSetup?: () => void }) {
                   )}
                 >
                   <UserCircle2 className="h-3.5 w-3.5" />
-                  Would hand off to a human here
+                  此处将转交人工客服
                 </p>
               )}
             </div>
@@ -165,7 +164,7 @@ export function AiPlayground({ onGoToSetup }: { onGoToSetup?: () => void }) {
         {sending && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Bot className="h-5 w-5 text-primary" />
-            <Loader2 className="h-4 w-4 animate-spin" /> Thinking…
+            <Loader2 className="h-4 w-4 animate-spin" /> 思考中…
           </div>
         )}
       </div>
@@ -176,7 +175,7 @@ export function AiPlayground({ onGoToSetup }: { onGoToSetup?: () => void }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type a customer message…"
+          placeholder="输入客户消息…"
           rows={1}
           className="flex-1 resize-none rounded-xl border border-border bg-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground outline-none focus:border-primary/50"
         />

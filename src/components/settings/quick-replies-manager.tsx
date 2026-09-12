@@ -77,7 +77,7 @@ export function QuickRepliesManager() {
   const save = useCallback(async () => {
     if (!draft) return;
     if (!draft.title.trim()) {
-      toast.error("Give the quick reply a name.");
+      toast.error("请为快捷回复命名。");
       return;
     }
     const payload =
@@ -97,14 +97,14 @@ export function QuickRepliesManager() {
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(data.error ?? "Couldn't save the quick reply.");
+        toast.error(data.error ?? "无法保存快捷回复。");
         return;
       }
-      toast.success(draft.id ? "Quick reply updated." : "Quick reply created.");
+      toast.success(draft.id ? "快捷回复已更新。" : "快捷回复已创建。");
       setDraft(null);
       await load();
     } catch {
-      toast.error("Couldn't save the quick reply.");
+      toast.error("无法保存快捷回复。");
     } finally {
       setSaving(false);
     }
@@ -112,10 +112,10 @@ export function QuickRepliesManager() {
 
   const remove = useCallback(
     async (id: string) => {
-      if (!window.confirm("Delete this quick reply?")) return;
+      if (!window.confirm("删除此快捷回复？")) return;
       const res = await fetch(`/api/quick-replies/${id}`, { method: "DELETE" });
       if (!res.ok) {
-        toast.error("Couldn't delete the quick reply.");
+        toast.error("无法删除快捷回复。");
         return;
       }
       await load();
@@ -126,12 +126,12 @@ export function QuickRepliesManager() {
   return (
     <div>
       <SettingsPanelHead
-        title="Quick replies"
-        description="Reusable snippets — plain text or a saved interactive message — that agents can insert from the inbox composer."
+        title="快捷回复"
+        description="可重复使用的文本片段或已保存的互动消息，客服可以从收件箱编辑器中插入。"
         action={
           <Button onClick={openCreate}>
             <Plus className="mr-1 h-4 w-4" />
-            New quick reply
+            新建快捷回复
           </Button>
         }
       />
@@ -142,7 +142,7 @@ export function QuickRepliesManager() {
         </div>
       ) : items.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
-          No quick replies yet. Create one to reuse it across conversations.
+          暂无快捷回复。创建一个即可在不同会话中重复使用。
         </p>
       ) : (
         <ul className="flex flex-col gap-2">
@@ -185,28 +185,28 @@ export function QuickRepliesManager() {
       <Dialog open={!!draft} onOpenChange={(o) => !o && setDraft(null)}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{draft?.id ? "Edit quick reply" : "New quick reply"}</DialogTitle>
+            <DialogTitle>{draft?.id ? "编辑快捷回复" : "新建快捷回复"}</DialogTitle>
           </DialogHeader>
           {draft && (
             <div className="max-h-[70vh] space-y-3 overflow-y-auto">
               <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Name</label>
+                <label className="mb-1 block text-xs text-muted-foreground">名称</label>
                 <Input
                   value={draft.title}
                   onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-                  placeholder="e.g. Business hours"
+                  placeholder="例如：营业时间"
                   className="bg-muted text-foreground"
                 />
               </div>
               <div className="flex gap-2">
                 <KindTab
                   active={draft.kind === "text"}
-                  label="Text"
+                  label="文本"
                   onClick={() => setDraft({ ...draft, kind: "text" })}
                 />
                 <KindTab
                   active={draft.kind === "interactive"}
-                  label="Interactive"
+                  label="互动消息"
                   onClick={() => setDraft({ ...draft, kind: "interactive" })}
                 />
               </div>
@@ -214,7 +214,7 @@ export function QuickRepliesManager() {
                 <Textarea
                   value={draft.content_text}
                   onChange={(e) => setDraft({ ...draft, content_text: e.target.value })}
-                  placeholder="The message text to insert"
+                  placeholder="要插入的消息文本"
                   className="min-h-28 bg-muted text-foreground"
                 />
               ) : (
@@ -227,11 +227,11 @@ export function QuickRepliesManager() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDraft(null)} disabled={saving}>
-              Cancel
+              取消
             </Button>
             <Button onClick={save} disabled={saving}>
               {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
-              Save
+              保存
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -69,32 +69,32 @@ export interface ThemeMeta {
 export const THEMES: ReadonlyArray<ThemeMeta> = [
   {
     id: "violet",
-    name: "Violet",
-    tagline: "The default — confident, slightly playful.",
+    name: "紫罗兰",
+    tagline: "默认主题，自信中略带活力。",
     swatch: "oklch(0.526 0.247 293)",
   },
   {
     id: "emerald",
-    name: "Emerald",
-    tagline: "Growth-coded, nods at messaging without copying WhatsApp green.",
+    name: "翡翠绿",
+    tagline: "寓意增长，带有消息沟通的气息，但不照搬 WhatsApp 绿。",
     swatch: "oklch(0.62 0.16 162)",
   },
   {
     id: "cobalt",
-    name: "Cobalt",
-    tagline: "Clean B2B-SaaS blue — calm and product-y.",
+    name: "钴蓝",
+    tagline: "简洁的 B2B SaaS 蓝，沉稳而富有产品感。",
     swatch: "oklch(0.585 0.2 254)",
   },
   {
     id: "amber",
-    name: "Amber",
-    tagline: "Warm and friendly — feels good for SMB teams.",
+    name: "琥珀",
+    tagline: "温暖友好，很适合中小企业团队。",
     swatch: "oklch(0.745 0.16 65)",
   },
   {
     id: "rose",
-    name: "Rose",
-    tagline: "Bold and modern — D2C, creator-economy, lifestyle.",
+    name: "玫瑰",
+    tagline: "大胆现代，适合 D2C、创作者经济和生活方式品牌。",
     swatch: "oklch(0.645 0.22 16)",
   },
 ];

@@ -70,13 +70,13 @@ export function AiUsageCard() {
       });
       const json = await res.json().catch(() => null);
       if (!res.ok) {
-        toast.error(json?.error ?? 'Failed to load usage');
+        toast.error(json?.error ?? '加载用量失败');
         setData(null);
         return;
       }
       setData(json as UsageResponse);
     } catch {
-      toast.error('Failed to load usage');
+      toast.error('加载用量失败');
       setData(null);
     } finally {
       setLoading(false);
@@ -105,11 +105,10 @@ export function AiUsageCard() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
-              <BarChart3 className="h-4 w-4 text-primary" /> Token usage
+              <BarChart3 className="h-4 w-4 text-primary" /> 令牌用量
             </CardTitle>
             <CardDescription>
-              Tokens spent on your provider key by drafts and the auto-reply
-              bot. Counts only — no message content is stored here.
+              使用你的服务商密钥生成草稿和自动回复时消耗的令牌数量。这里只统计数量，不会存储消息内容。
             </CardDescription>
           </div>
           <Select
@@ -122,7 +121,7 @@ export function AiUsageCard() {
             <SelectContent>
               {WINDOWS.map((w) => (
                 <SelectItem key={w} value={String(w)}>
-                  Last {w} days
+                  最近 {w} 天
                 </SelectItem>
               ))}
             </SelectContent>
@@ -135,23 +134,23 @@ export function AiUsageCard() {
         ) : !hasSpend ? (
           <div className="flex flex-col items-center justify-center gap-2 py-10 text-center text-sm text-muted-foreground">
             <BarChart3 className="h-8 w-8 opacity-40" />
-            <p>No AI usage in the last {data.window_days} days yet.</p>
+            <p>最近 {data.window_days} 天暂无 AI 用量。</p>
             <p className="text-xs">
-              This fills in as the assistant drafts and auto-replies.
+              助手生成草稿和自动回复后，这里会显示用量。
             </p>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Stat label="Total tokens" value={formatCompactNumber(data.totals.total_tokens)} />
-              <Stat label="LLM calls" value={String(data.totals.calls)} />
+              <Stat label="令牌总数" value={formatCompactNumber(data.totals.total_tokens)} />
+              <Stat label="模型调用次数" value={String(data.totals.calls)} />
               <Stat
-                label="Auto-reply"
+                label="自动回复"
                 value={formatCompactNumber(data.by_mode.auto_reply.tokens)}
                 icon={Bot}
               />
               <Stat
-                label="Drafts"
+                label="草稿"
                 value={formatCompactNumber(data.by_mode.draft.tokens)}
                 icon={PencilLine}
               />
@@ -159,7 +158,7 @@ export function AiUsageCard() {
 
             <div>
               <p className="mb-2 text-xs font-medium text-muted-foreground">
-                Tokens per day
+                每日令牌数
               </p>
               <BarChart
                 data={chartData}
@@ -176,7 +175,7 @@ export function AiUsageCard() {
             {data.by_model.length > 0 && (
               <div>
                 <p className="mb-2 text-xs font-medium text-muted-foreground">
-                  By model
+                  按模型
                 </p>
                 <ul className="divide-y divide-border rounded-md border border-border">
                   {data.by_model.map((m) => (
@@ -192,7 +191,7 @@ export function AiUsageCard() {
                       </span>
                       <span className="flex-shrink-0 tabular-nums text-muted-foreground">
                         {formatCompactNumber(m.tokens)} tok · {m.calls}{' '}
-                        {m.calls === 1 ? 'call' : 'calls'}
+                        {m.calls === 1 ? '次调用' : '次调用'}
                       </span>
                     </li>
                   ))}
@@ -202,8 +201,7 @@ export function AiUsageCard() {
 
             {data.truncated && (
               <p className="text-xs text-muted-foreground">
-                Showing a partial window — usage is high enough that only the
-                most recent records are summarized here.
+                当前显示的是部分时间范围，因为用量较高，这里仅汇总最近的记录。
               </p>
             )}
           </>
