@@ -1,0 +1,34 @@
+-- ============================================================
+-- 042_grant_touch_presence.sql — fix: presence always shows offline
+--
+-- Bug
+--
+--   Every signed-in member showed as "offline" in the Team roster
+--   and the inbox Assign dropdown, even while actively using the
+--   dashboard.
+--
+-- Root cause
+--
+--   024_member_presence.sql created `touch_presence(TEXT)` as
+--   SECURITY DEFINER but never granted EXECUTE on it. Supabase
+--   revokes the default PUBLIC EXECUTE privilege on new functions
+--   (ALTER DEFAULT PRIVILEGES ... REVOKE EXECUTE ON FUNCTIONS FROM
+--   PUBLIC), so `authenticated` could not call the RPC at all.
+--
+--   The heartbeat is best-effort by design — PresenceHeartbeat
+--   swallows the failure and only logs to the console — so the
+--   client kept running with no presence row ever written. With no
+--   row, `derivePresence` returns 'offline' for everyone, including
+--   the caller themselves.
+--
+-- Fix
+--
+--   Grant EXECUTE to `authenticated`. The function stays SECURITY
+--   DEFINER and still derives the account from the caller's own
+--   profile, so a client can never spoof which account it appears
+--   in. No anon grant: presence requires a signed-in user.
+--
+-- Idempotent — safe to run multiple times.
+-- ============================================================
+
+GRANT EXECUTE ON FUNCTION public.touch_presence(TEXT) TO authenticated;
