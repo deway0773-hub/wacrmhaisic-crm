@@ -61,17 +61,16 @@ interface NewRecipient {
 export async function POST(request: Request) {
   try {
     // Requires the 'agent' role — `canSendMessages` in lib/auth/roles is
-    // explicit that running broadcasts is a write operation and that
-    // viewers are read-only.
+    // explicit that running broadcasts is a write operation.
     //
     // This endpoint writes NOTHING to the database: it reads the config
     // and template, then calls Meta directly. So unlike the rest of the
     // app there was no RLS policy backstopping a missing role check —
     // resolving `account_id` straight off the profile (which only needs
-    // 'viewer') was the ONLY gate, and it let a viewer blast a template
-    // to arbitrary phone numbers from the account's WhatsApp number.
-    // Nothing about that is recoverable after the fact, so the check has
-    // to happen here.
+    // membership) was the ONLY gate, and it let a lower role blast a
+    // template to arbitrary phone numbers from the account's WhatsApp
+    // number. Nothing about that is recoverable after the fact, so the
+    // check has to happen here.
     const { supabase, accountId, userId } = await requireRole('agent')
 
     // Per-user broadcast budget. Note: this limits how often a user

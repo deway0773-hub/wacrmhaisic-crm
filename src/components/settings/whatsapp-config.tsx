@@ -83,7 +83,7 @@ export function WhatsAppConfig() {
   // toll to pay for flipping a boolean. The switch writes straight to
   // the row instead — RLS (migration 017) restricts whatsapp_config
   // UPDATE to admins, hence the canEditSettings gate below; without it
-  // a viewer's toggle would match zero rows and appear to work.
+  // a lower role's toggle would match zero rows and appear to work.
   const [mirrorMedia, setMirrorMedia] = useState(true);
   const [savingMirror, setSavingMirror] = useState(false);
 

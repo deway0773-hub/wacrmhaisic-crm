@@ -184,7 +184,7 @@ export function MessageComposer({
   const cancelledRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Viewers (read-only role) can browse the inbox but never send.
+  // Lower roles can browse the inbox but never send.
   // For solo users this is always true — single-owner accounts pass
   // every capability — so the disabled branch is a no-op there.
   const canSend = useCan("send-messages");

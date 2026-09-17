@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { normalizeAccountToEmail } from "@/lib/auth/account-name";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,8 +50,15 @@ function LoginPageInner() {
     setError(null);
     setLoading(true);
 
+    // Members are created with a plain account name (e.g. `zheng00`),
+    // which the backend maps to `<account>@local.fake`. Accept either
+    // form here: a bare account name is expanded the same way, while
+    // a value that already contains `@` is used as-is. The shared
+    // helper also lowercases, so `Zheng00` and `zheng00` match.
+    const loginEmail = normalizeAccountToEmail(email);
+
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: loginEmail,
       password,
     });
 
@@ -108,7 +116,10 @@ function LoginPageInner() {
               </Label>
               <Input
                 id="email"
-                type="email"
+                type="text"
+                autoComplete="off"
+                autoCapitalize="none"
+                spellCheck={false}
                 placeholder={t('emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

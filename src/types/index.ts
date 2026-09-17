@@ -65,7 +65,7 @@ export interface Account {
  * Hydrated member row for the Settings → Members tab. Combines
  * the profile and its account_role for a single member of the
  * caller's account. Sensitive fields (email) are populated only
- * when the caller has admin+ — agents and viewers see name +
+ * when the caller has admin+ — agents see name +
  * avatar + role only.
  */
 export interface AccountMember {
@@ -75,6 +75,13 @@ export interface AccountMember {
   avatar_url: string | null;
   role: AccountRole;
   joined_at: string;
+  /**
+   * Max new conversations this member may be assigned per day.
+   * `null` = unlimited. Set by admins in Settings → Members.
+   */
+  daily_conversation_limit: number | null;
+  /** Conversations assigned to this member since UTC midnight. */
+  assigned_today: number;
 }
 
 /**

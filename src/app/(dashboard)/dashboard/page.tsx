@@ -2,13 +2,11 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useAuth } from '@/hooks/use-auth'
-import { formatCurrency } from '@/lib/currency'
 import {
   MessageSquare,
   UserPlus,
-  DollarSign,
   Send,
+  UserCheck,
 } from 'lucide-react'
 
 import {
@@ -40,7 +38,6 @@ type RangeDays = 7 | 30 | 90
 
 export default function DashboardPage() {
   const t = useTranslations('Dashboard.page')
-  const { defaultCurrency } = useAuth()
   const [metrics, setMetrics] = useState<MetricsBundle | null>(null)
   const [metricsLoading, setMetricsLoading] = useState(true)
 
@@ -165,12 +162,6 @@ export default function DashboardPage() {
               }}
             />
             <MetricCard
-              title={t('openDealsValue')}
-              value={formatCurrency(metrics.openDealsValue, defaultCurrency)}
-              icon={DollarSign}
-              subtitle={t('openDeals', { count: metrics.openDealsCount })}
-            />
-            <MetricCard
               title={t('messagesSentToday')}
               value={metrics.messagesSentToday.current.toLocaleString()}
               icon={Send}
@@ -183,6 +174,12 @@ export default function DashboardPage() {
                   t('noChange', { suffix: t('vsYesterday') })
                 ),
               }}
+            />
+            <MetricCard
+              title={t('wonCustomers')}
+              value={metrics.wonCustomersCount.toLocaleString()}
+              icon={UserCheck}
+              subtitle={t('wonCustomersHint')}
             />
           </>
         )}
@@ -211,7 +208,6 @@ export default function DashboardPage() {
           <PipelineDonut
             data={pipeline}
             loading={pipelineLoading}
-            currency={defaultCurrency}
           />
         </div>
       </div>

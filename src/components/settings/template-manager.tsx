@@ -528,7 +528,7 @@ export function TemplateManager() {
                       <Badge
                         className={`text-xs border ${categoryColors[template.category] || ''}`}
                       >
-                        {template.category === 'MARKETING' ? '营销' : template.category === 'UTILITY' ? '实用工具' : '身份验证'}
+                        {template.category === 'Marketing' ? '营销' : template.category === 'Utility' ? '实用工具' : '身份验证'}
                       </Badge>
                       <Badge className={`text-xs border ${status.classes}`}>
                         {status.label}

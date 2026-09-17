@@ -26,8 +26,8 @@ export async function POST(
 
   // Changing status (activate / draft / archive) is a write — the RLS
   // flows_update policy requires `agent`, but the service-role client
-  // below bypasses RLS, so enforce the role here (a viewer passes the
-  // membership-only ownership check).
+  // below bypasses RLS, so enforce the role here (a lower role passes
+  // the membership-only ownership check).
   try {
     await requireRole('agent')
   } catch (err) {

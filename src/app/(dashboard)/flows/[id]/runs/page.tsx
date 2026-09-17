@@ -84,7 +84,7 @@ const STATUS_META: Record<
     icon: Clock,
   },
   paused_by_agent: {
-    label: "已由客服暂停",
+    label: "已由销售暂停",
     classes: "border-border bg-muted text-muted-foreground",
     icon: PauseCircle,
   },

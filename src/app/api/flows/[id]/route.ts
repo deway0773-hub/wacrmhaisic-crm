@@ -95,7 +95,7 @@ export async function PUT(
 
   // Writes require at least `agent` — the RLS flows_update policy demands
   // it, but this route mutates via the service-role client which bypasses
-  // RLS, so the role must be enforced here (a viewer passes ownership).
+  // RLS, so the role must be enforced here (a lower role passes ownership).
   try {
     await requireRole('agent')
   } catch (err) {

@@ -438,9 +438,9 @@ export async function sendMessageToConversation(
   }
 
   if (workingPhone !== sanitizedPhone) {
-    console.log(
-      `[send-message] Auto-corrected contact phone: ${sanitizedPhone} → ${workingPhone}`
-    );
+    // Don't log the phone numbers themselves — they're PII. The
+    // fact that a correction happened is enough for debugging.
+    console.log('[send-message] Auto-corrected contact phone format');
     await db
       .from('contacts')
       .update({ phone: workingPhone })

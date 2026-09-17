@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   try {
     // Reacting is a write operation (`canSendMessages`), and it pushes the
     // reaction to Meta before mirroring it locally — so, as on /send, a
-    // missing role check let a read-only viewer put a visible reaction on
+    // missing role check let a lower role put a visible reaction on
     // the customer's message even though RLS blocked the local mirror.
     const { supabase, accountId, userId } = await requireRole('agent');
 

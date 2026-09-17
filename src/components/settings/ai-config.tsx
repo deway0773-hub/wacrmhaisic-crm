@@ -120,8 +120,9 @@ export function AiConfig() {
     void fetchConfig();
     // Members populate the handoff-target picker. Best-effort — on an
     // older deployment without the endpoint the picker just shows the
-    // queue option.
-    void fetchAccountMembers().then(setMembers);
+    // queue option. Include virtual members: the AI can hand a thread
+    // off to an assignee that has no login yet.
+    void fetchAccountMembers({ includeVirtual: true }).then(setMembers);
   }, [accountId, fetchConfig]);
 
   // Swap the model default when the provider changes, unless the user

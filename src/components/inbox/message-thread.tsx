@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { fetchAccountMembers } from "@/lib/account/members";
 import { useAuth } from "@/hooks/use-auth";
 import { usePresence } from "@/hooks/use-presence";
 import { PresenceDot } from "@/components/presence/presence-dot";
@@ -17,6 +18,16 @@ import type {
   Profile,
   InteractiveMessagePayload,
 } from "@/types";
+
+/**
+ * A profile row plus the assignment-cap fields the inbox needs.
+ * `daily_conversation_limit` is `null` when unlimited; `assigned_today`
+ * is the count of conversations assigned since UTC midnight.
+ */
+type AssignableProfile = Profile & {
+  daily_conversation_limit: number | null;
+  assigned_today: number;
+};
 import {
   MessageSquare,
   ChevronDown,
@@ -173,7 +184,7 @@ export function MessageThread({
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [profiles, setProfiles] = useState<AssignableProfile[]>([]);
   const [reactions, setReactions] = useState<MessageReaction[]>([]);
   // Purely visual spin state for the manual-refresh button. The actual
   // refetch is fire-and-forget through `onRefresh` (which bumps the
@@ -211,20 +222,32 @@ export function MessageThread({
   // Profiles are bounded by RLS to rows the current user is allowed to
   // see — today that's just the current user, but the dropdown keeps the
   // shape ready for shared-team workspaces without a refactor.
+  //
+  // We go through /api/account/members rather than reading `profiles`
+  // directly so we also get each member's daily cap and how many
+  // conversations they've already taken today (migration 043).
   useEffect(() => {
     let cancelled = false;
-    const supabase = createClient();
-    supabase
-      .from("profiles")
-      .select("*")
-      .order("full_name")
-      .then(({ data, error }) => {
+    fetchAccountMembers()
+      .then((members) => {
         if (cancelled) return;
-        if (error) {
-          console.error("Failed to fetch profiles:", error);
-          return;
-        }
-        setProfiles((data as Profile[]) ?? []);
+        setProfiles(
+          members.map((m) => ({
+            id: m.user_id,
+            user_id: m.user_id,
+            full_name: m.full_name,
+            email: m.email ?? "",
+            avatar_url: m.avatar_url ?? undefined,
+            role: m.role,
+            created_at: m.joined_at,
+            daily_conversation_limit: m.daily_conversation_limit,
+            assigned_today: m.assigned_today,
+          })),
+        );
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Failed to fetch profiles:", error);
       });
     return () => {
       cancelled = true;
@@ -843,21 +866,36 @@ export function MessageThread({
     async (agentId: string | null) => {
       if (!conversation) return;
 
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("conversations")
-        .update({ assigned_agent_id: agentId })
-        .eq("id", conversation.id);
+      // Go through the guarded API route rather than writing to
+      // Supabase directly: it enforces the agent's daily cap
+      // (migration 043) and returns 409 when they're full.
+      const res = await fetch(`/api/conversations/${conversation.id}/assign`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agentId }),
+      });
 
-      if (error) {
-        console.error("Failed to update assignment:", error);
-        toast.error("更新分配失败");
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => null)) as
+          | { code?: string; limit?: number | null; assignedToday?: number }
+          | null;
+        console.error("Failed to update assignment:", payload);
+        if (payload?.code === "agent_at_capacity") {
+          toast.error(
+            t("assignAtCapacity", {
+              count: payload.assignedToday ?? 0,
+              limit: payload.limit ?? 0,
+            }),
+          );
+        } else {
+          toast.error(t("assignFailed"));
+        }
         return;
       }
 
       onAssignChange(conversation.id, agentId);
     },
-    [conversation, onAssignChange],
+    [conversation, onAssignChange, t],
   );
 
   // Empty state — same WhatsApp-style doodle background as the active
@@ -1036,10 +1074,15 @@ export function MessageThread({
                 profiles.map((p) => {
                   const isSelected = p.user_id === assignedAgentId;
                   const presence = getPresence(p.user_id);
+                  // Daily cap (migration 043). `null` = unlimited.
+                  const cap = p.daily_conversation_limit ?? null;
+                  const takenToday = p.assigned_today ?? 0;
+                  const atCapacity = cap !== null && takenToday >= cap;
                   return (
                     <DropdownMenuItem
                       key={p.id}
                       onClick={() => handleAssignChange(p.user_id)}
+                      disabled={atCapacity && !isSelected}
                       className={cn(
                         "text-sm",
                         isSelected ? "text-primary" : "text-popover-foreground"
@@ -1058,6 +1101,21 @@ export function MessageThread({
                         {p.full_name}
                         {p.user_id === user?.id ? t("me") : ""}
                       </span>
+                      {cap !== null && (
+                        <span
+                          className={cn(
+                            "ml-2 text-[10px] tabular-nums",
+                            atCapacity
+                              ? "text-destructive"
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          {t("assignTodayCount", {
+                            count: takenToday,
+                            limit: cap,
+                          })}
+                        </span>
+                      )}
                       {isSelected && <Check className="ml-2 h-3 w-3" />}
                     </DropdownMenuItem>
                   );

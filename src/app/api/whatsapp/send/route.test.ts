@@ -15,7 +15,8 @@ const messageInserts: Array<Record<string, unknown>> = []
 let existingConversation: Record<string, unknown> | null = null
 let contactRow: Record<string, unknown> | null = null
 // The caller's role, as `requireRole` reads it off the profile. Sending
-// requires 'agent'; 'viewer' must be refused before anything reaches Meta.
+// requires 'agent'; a role below that (or an unknown one) must be refused
+// before anything reaches Meta.
 let callerRole: string = 'admin'
 // A conversation created during the request becomes retrievable by id —
 // the shared send core re-loads the conversation (with its contact) from
@@ -290,13 +291,14 @@ describe('POST /api/whatsapp/send — role enforcement', () => {
     vi.clearAllMocks()
   })
 
-  it('refuses a viewer with 403 and never reaches Meta', async () => {
-    // A viewer is read-only (`canSendMessages`). The route used to resolve
-    // account_id straight off the profile with no role check: RLS blocked
-    // the message INSERT, but the send core calls Meta first, so the
-    // customer still received a real WhatsApp message that RLS could not
-    // un-send. The gate has to come before any outbound call.
-    callerRole = 'viewer'
+  it('refuses a caller without send permission with 403 and never reaches Meta', async () => {
+    // A caller whose role is below 'agent' (or unknown) is read-only
+    // (`canSendMessages`). The route used to resolve account_id straight
+    // off the profile with no role check: RLS blocked the message INSERT,
+    // but the send core calls Meta first, so the customer still received a
+    // real WhatsApp message that RLS could not un-send. The gate has to
+    // come before any outbound call.
+    callerRole = 'unknown'
 
     const res = await postContactTemplate()
 

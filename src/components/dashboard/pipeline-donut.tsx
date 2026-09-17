@@ -2,20 +2,17 @@
 
 import { GitBranch } from 'lucide-react'
 import type { PipelineDonutData } from '@/lib/dashboard/types'
-import { formatCurrencyShort } from '@/lib/currency'
 import { EmptyState } from './empty-state'
 import { Skeleton } from './skeleton'
 
 interface PipelineDonutProps {
   data: PipelineDonutData | null
   loading: boolean
-  /** Account default currency for the totals. */
-  currency: string
 }
 
 import { useTranslations } from 'next-intl'
 
-export function PipelineDonut({ data, loading, currency }: PipelineDonutProps) {
+export function PipelineDonut({ data, loading }: PipelineDonutProps) {
   const t = useTranslations('Dashboard.pipelineDonut')
   return (
     <section className="flex h-full flex-col rounded-xl border border-border bg-card">
@@ -37,7 +34,7 @@ export function PipelineDonut({ data, loading, currency }: PipelineDonutProps) {
           />
         ) : (
           <>
-            <Donut data={data} currency={currency} />
+            <Donut data={data} />
             <ul className="mt-5 space-y-2">
               {data.stages.map((s) => (
                 <li key={s.id} className="flex items-center gap-3 text-xs">
@@ -49,9 +46,6 @@ export function PipelineDonut({ data, loading, currency }: PipelineDonutProps) {
                   <span className="flex-1 truncate text-muted-foreground">{s.name}</span>
                   <span className="text-muted-foreground tabular-nums">
                     {t('dealCount', { count: s.dealCount })}
-                  </span>
-                  <span className="w-20 text-right text-muted-foreground tabular-nums">
-                    {formatCurrencyShort(s.totalValue, currency)}
                   </span>
                 </li>
               ))}
@@ -69,7 +63,7 @@ export function PipelineDonut({ data, loading, currency }: PipelineDonutProps) {
 // between segments are implied by a thin slate-900 stroke between
 // them for a cleaner look.
 // ------------------------------------------------------------
-function Donut({ data, currency }: { data: PipelineDonutData; currency: string }) {
+function Donut({ data }: { data: PipelineDonutData }) {
   const t = useTranslations('Dashboard.pipelineDonut')
   const size = 200
   const r = 80
@@ -79,10 +73,10 @@ function Donut({ data, currency }: { data: PipelineDonutData; currency: string }
 
   // Small slices would render as slivers that disappear into stroke
   // rounding. We give each stage a floor share purely for rendering,
-  // but keep the labels/legend honest with the actual totals.
-  const totalRaw = data.totalValue || 1
+  // but keep the labels/legend honest with the actual counts.
+  const totalRaw = data.stages.reduce((sum, s) => sum + s.dealCount, 0) || 1
   const minFrac = 0.02
-  const rawShares = data.stages.map((s) => s.totalValue / totalRaw)
+  const rawShares = data.stages.map((s) => s.dealCount / totalRaw)
   const floored = rawShares.map((x) => Math.max(x, minFrac))
   const floorSum = floored.reduce((a, b) => a + b, 0)
   const shares = floored.map((x) => x / floorSum)
@@ -128,7 +122,7 @@ function Donut({ data, currency }: { data: PipelineDonutData; currency: string }
           textAnchor="middle"
           className="fill-foreground text-[18px] font-semibold tabular-nums"
         >
-          {formatCurrencyShort(data.totalValue, currency)}
+          {data.stages.reduce((sum, s) => sum + s.dealCount, 0)}
         </text>
       </svg>
     </div>

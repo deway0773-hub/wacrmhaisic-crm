@@ -127,7 +127,7 @@ export function QuickRepliesManager() {
     <div>
       <SettingsPanelHead
         title="快捷回复"
-        description="可重复使用的文本片段或已保存的互动消息，客服可以从收件箱编辑器中插入。"
+        description="可重复使用的文本片段或已保存的互动消息，销售可以从收件箱编辑器中插入。"
         action={
           <Button onClick={openCreate}>
             <Plus className="mr-1 h-4 w-4" />

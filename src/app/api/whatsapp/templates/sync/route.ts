@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server'
-import {
-  ForbiddenError,
-  UnauthorizedError,
-  requireRole,
-  toErrorResponse,
-} from '@/lib/auth/account'
+import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { decrypt } from '@/lib/whatsapp/encryption'
 import { normalizeStatus } from '@/lib/whatsapp/template-status-normalize'
 import type { TemplateButton, TemplateSampleValues } from '@/types'
@@ -295,21 +290,9 @@ export async function POST() {
       truncated: pageCount >= PAGE_CAP && nextUrl !== null,
     })
   } catch (error) {
-    // Auth failures map to 401/403 rather than being folded into the
-    // generic 500 below, which surfaces `error.message` as a sync failure.
-    if (
-      error instanceof UnauthorizedError ||
-      error instanceof ForbiddenError
-    ) {
-      return toErrorResponse(error)
-    }
+    // Auth failures map to 401/403; everything else collapses to a
+    // generic 500 so we never leak internal error text to the client.
     console.error('Error syncing WhatsApp templates:', error)
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : 'Failed to sync templates',
-      },
-      { status: 500 },
-    )
+    return toErrorResponse(error)
   }
 }

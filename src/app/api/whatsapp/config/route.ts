@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import {
   registerPhoneNumber,
   subscribeWabaToApp,
@@ -165,24 +166,13 @@ export async function GET() {
  */
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const accountId = await resolveAccountId(supabase, user.id)
-    if (!accountId) {
-      return NextResponse.json(
-        { error: 'Your profile is not linked to an account.' },
-        { status: 403 },
-      )
-    }
+    // Connecting / reconfiguring the account's WhatsApp number is an
+    // admin-level action: it rotates the shared access token every
+    // teammate sends through. RLS already enforces this
+    // (`whatsapp_config_insert/update` require is_account_member(...,
+    // 'admin')), but checking here turns a confusing 500 into a clear
+    // 403 and keeps the guard next to the code it protects.
+    const { supabase, accountId, userId } = await requireRole('admin')
 
     const body = await request.json()
     const { phone_number_id, waba_id, access_token, verify_token, pin } = body
@@ -388,7 +378,7 @@ export async function POST(request: Request) {
         .from('whatsapp_config')
         .insert({
           account_id: accountId,
-          user_id: user.id,
+          user_id: userId,
           ...baseRow,
         })
 
@@ -426,8 +416,10 @@ export async function POST(request: Request) {
       phone_info: phoneInfo,
     })
   } catch (error) {
-    console.error('Error in WhatsApp config POST:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    // requireRole throws Unauthorized/Forbidden; toErrorResponse maps
+    // those to 401/403 and collapses everything else to a generic 500
+    // without leaking the underlying message.
+    return toErrorResponse(error)
   }
 }
 
@@ -440,24 +432,11 @@ export async function POST(request: Request) {
  */
 export async function DELETE() {
   try {
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const accountId = await resolveAccountId(supabase, user.id)
-    if (!accountId) {
-      return NextResponse.json(
-        { error: 'Your profile is not linked to an account.' },
-        { status: 403 },
-      )
-    }
+    // Disconnecting the number is admin-only for the same reason as
+    // POST — it takes the whole account offline. RLS enforces it too
+    // (whatsapp_config_delete), but a route-level check gives a clean
+    // 403 instead of a 500.
+    const { supabase, accountId } = await requireRole('admin')
 
     const { error: deleteError } = await supabase
       .from('whatsapp_config')
@@ -474,7 +453,6 @@ export async function DELETE() {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error in WhatsApp config DELETE:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return toErrorResponse(error)
   }
 }

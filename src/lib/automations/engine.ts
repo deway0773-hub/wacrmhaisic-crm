@@ -24,6 +24,7 @@ import { MAX_TAG_CHAIN_DEPTH, getTagChainDepth } from '@/lib/contacts/tag-chain'
 import { engineSendText, engineSendTemplate, engineSendInteractive } from './meta-send'
 import { validateInteractivePayload } from '@/lib/whatsapp/interactive'
 import { isDeliverableUrl } from '@/lib/webhooks/ssrf'
+import { assignConversation } from '@/lib/account/assign-conversation'
 
 // ------------------------------------------------------------
 // Public API
@@ -483,25 +484,39 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
     case 'assign_conversation': {
       const cfg = step.step_config as AssignConversationStepConfig
       if (!args.contactId) throw new Error('assign_conversation needs a contact')
-      let agentId = cfg.agent_id
-      if (cfg.mode === 'round_robin') {
-        // Pick any member of the account. The existing implementation
-        // only ever returned the automation's author; preserving that
-        // shape until a real round-robin algorithm replaces it.
-        const { data: profiles } = await db
-          .from('profiles')
-          .select('user_id')
-          .eq('account_id', args.automation.account_id)
-          .limit(1)
-        agentId = profiles?.[0]?.user_id
-      }
-      if (!agentId) return 'no agent resolved'
-      await db
+
+      // Resolve the conversation this contact belongs to. The step
+      // assigns a conversation, not a contact, so we need its id.
+      const { data: conv } = await db
         .from('conversations')
-        .update({ assigned_agent_id: agentId })
+        .select('id')
         .eq('account_id', args.automation.account_id)
         .eq('contact_id', args.contactId)
-      return `assigned to ${agentId}`
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+
+      if (!conv) return 'no conversation to assign'
+
+      if (cfg.mode === 'specific') {
+        if (!cfg.agent_id) return 'no agent resolved'
+        await db
+          .from('conversations')
+          .update({ assigned_agent_id: cfg.agent_id })
+          .eq('id', conv.id)
+          .eq('account_id', args.automation.account_id)
+        return `assigned to ${cfg.agent_id}`
+      }
+
+      // round_robin: online agents only, skipping anyone who has hit
+      // their daily cap. When nobody is eligible the conversation is
+      // left in the unassigned pool (see @/lib/account/assign-conversation).
+      const outcome = await assignConversation({
+        accountId: args.automation.account_id,
+        conversationId: conv.id,
+        assignedBy: args.automation.user_id ?? null,
+      })
+      return outcome.message
     }
 
     case 'update_contact_field': {

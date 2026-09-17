@@ -10,8 +10,8 @@ export interface MetricDelta {
 export interface MetricsBundle {
   activeConversations: MetricDelta
   newContactsToday: MetricDelta
-  openDealsValue: number
-  openDealsCount: number
+  /** Distinct contacts linked to deals with status = 'won'. */
+  wonCustomersCount: number
   messagesSentToday: MetricDelta
 }
 
@@ -26,12 +26,10 @@ export interface PipelineStageSlice {
   name: string
   color: string
   dealCount: number
-  totalValue: number
 }
 
 export interface PipelineDonutData {
   stages: PipelineStageSlice[]
-  totalValue: number
 }
 
 export interface ResponseTimeBucket {

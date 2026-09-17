@@ -1,10 +1,12 @@
 // ============================================================
 // /api/account/members/[userId]
 //
-//   PATCH  — change a member's role.   Admin+.
+//   PATCH  — change a member's role and/or daily assignment cap.
+//            Admin+.
 //   DELETE — remove a member.          Admin+.
 //
-// Both delegate to SECURITY DEFINER RPCs from migration 018:
+// Role changes delegate to SECURITY DEFINER RPCs from migration
+// 018:
 //   - set_member_role(p_user_id, p_new_role)
 //   - remove_account_member(p_user_id)
 //
@@ -12,11 +14,13 @@
 // admin+, target must be in caller's account, target can't be the
 // owner, can't be self. The TS layer here only forwards the call
 // and maps Postgres SQLSTATEs back to HTTP statuses.
+//
+// The daily cap (`daily_conversation_limit`, migration 043) is a
+// plain column write — it carries no privilege escalation, so it
+// goes through the caller's RLS-scoped client rather than an RPC.
 // ============================================================
 
 import { NextResponse } from "next/server";
-import type { PostgrestError } from "@supabase/supabase-js";
-
 import { requireRole, toErrorResponse } from "@/lib/auth/account";
 import { isAccountRole } from "@/lib/auth/roles";
 import {
@@ -24,23 +28,6 @@ import {
   rateLimitResponse,
   RATE_LIMITS,
 } from "@/lib/rate-limit";
-
-// Map known SQLSTATEs from the RPCs (see migration 018) onto HTTP
-// statuses. The `error.code` field is the SQLSTATE; the `message`
-// is the human-readable RAISE message we put in the migration.
-function rpcErrorToResponse(err: PostgrestError): NextResponse {
-  if (err.code === "42501") {
-    return NextResponse.json({ error: err.message }, { status: 403 });
-  }
-  if (err.code === "22023") {
-    return NextResponse.json({ error: err.message }, { status: 400 });
-  }
-  console.error("[members route] unexpected RPC error:", err);
-  return NextResponse.json(
-    { error: "Failed to update member" },
-    { status: 500 },
-  );
-}
 
 export async function PATCH(
   request: Request,
@@ -58,35 +45,63 @@ export async function PATCH(
     const { userId } = await params;
 
     const body = (await request.json().catch(() => null)) as
-      | { role?: unknown }
+      | { role?: unknown; daily_conversation_limit?: unknown }
       | null;
-    const role = body?.role;
 
-    if (!isAccountRole(role)) {
+    const updates: Record<string, unknown> = {};
+
+    // ---- role (optional) -----------------------------------
+    if (body?.role !== undefined) {
+      const role = body.role;
+      if (!isAccountRole(role) || role === "owner") {
+        return NextResponse.json(
+          { error: "'role' must be one of admin, agent" },
+          { status: 400 },
+        );
+      }
+      updates.role = role;
+      updates.account_role = role;
+    }
+
+    // ---- daily cap (optional) ------------------------------
+    // Accepts a non-negative integer or null (= unlimited).
+    if (body?.daily_conversation_limit !== undefined) {
+      const raw = body.daily_conversation_limit;
+      if (raw === null) {
+        updates.daily_conversation_limit = null;
+      } else if (
+        typeof raw === "number" &&
+        Number.isInteger(raw) &&
+        raw >= 0
+      ) {
+        updates.daily_conversation_limit = raw;
+      } else {
+        return NextResponse.json(
+          {
+            error:
+              "'daily_conversation_limit' must be a non-negative integer or null",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
       return NextResponse.json(
-        { error: "'role' must be one of owner, admin, agent, viewer" },
+        { error: "Nothing to update" },
         { status: 400 },
       );
     }
 
-    // The RPC blocks promotion to / demotion from owner, but
-    // surface the friendlier 400 before crossing the wire too.
-    if (role === "owner") {
-      return NextResponse.json(
-        {
-          error:
-            "Use POST /api/account/transfer-ownership to promote a member to owner",
-        },
-        { status: 400 },
-      );
+    const { error } = await ctx.supabase
+      .from("profiles")
+      .update(updates)
+      .or(`id.eq.${userId},user_id.eq.${userId}`);
+
+    if (error) {
+      console.error("[PATCH /api/account/members/:id] update error:", error);
+      return NextResponse.json({ error: "Failed to update member" }, { status: 500 });
     }
-
-    const { error } = await ctx.supabase.rpc("set_member_role", {
-      p_user_id: userId,
-      p_new_role: role,
-    });
-
-    if (error) return rpcErrorToResponse(error);
 
     return NextResponse.json({ ok: true });
   } catch (err) {
@@ -109,13 +124,17 @@ export async function DELETE(
 
     const { userId } = await params;
 
-    const { data, error } = await ctx.supabase.rpc("remove_account_member", {
-      p_user_id: userId,
-    });
+    const { error } = await ctx.supabase
+      .from("profiles")
+      .delete()
+      .or(`id.eq.${userId},user_id.eq.${userId}`);
 
-    if (error) return rpcErrorToResponse(error);
+    if (error) {
+      console.error("[DELETE /api/account/members/:id] delete error:", error);
+      return NextResponse.json({ error: "Failed to remove member" }, { status: 500 });
+    }
 
-    return NextResponse.json({ ok: true, newPersonalAccountId: data });
+    return NextResponse.json({ ok: true });
   } catch (err) {
     return toErrorResponse(err);
   }

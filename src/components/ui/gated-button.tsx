@@ -10,8 +10,8 @@
 //   browsers don't fire mouse events on disabled form controls.
 //   Title attributes only render when the element receives a
 //   mouseover. The 9-PR multi-user series relied on this pattern
-//   for every "read-only for viewer" CTA across the app, which
-//   meant viewers on those browsers saw a silently-disabled
+//   for every "read-only" CTA across the app, which meant
+//   under-privileged users on those browsers saw a silently-disabled
 //   button with no explanation.
 //
 //   Wrapping the disabled button in a `<span title=...>` makes

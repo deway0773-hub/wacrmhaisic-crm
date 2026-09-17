@@ -287,11 +287,13 @@ function ResourcesProvider({ children }: { children: ReactNode }) {
     })()
 
     // Members go through the API so we inherit its email-visibility
-    // rules (agents/viewers don't see emails). Unreachable on older
+    // rules (agents don't see emails). Unreachable on older
     // deployments → pickers fall back to a raw agent-id input.
+    // Include virtual members: automations can assign work to an
+    // assignee that has no login yet.
     void (async () => {
       try {
-        const res = await fetch("/api/account/members", { cache: "no-store" })
+        const res = await fetch("/api/account/members?includeVirtual=1", { cache: "no-store" })
         if (!res.ok) return
         const json = (await res.json()) as { members?: AccountMember[] }
         if (!cancelled) setMembers(json.members ?? [])

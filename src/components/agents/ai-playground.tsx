@@ -108,7 +108,7 @@ export function AiPlayground({ onGoToSetup }: { onGoToSetup?: () => void }) {
             <Bot className="mb-2 h-8 w-8 text-muted-foreground/60" />
             <p>发送消息，查看你的智能体会如何回复。</p>
             <p className="mt-1 text-xs">
-              它会使用你的知识库，行为与自动回复机器人完全一致，包括转交人工客服。
+              它会使用你的知识库，行为与自动回复机器人完全一致，包括转交销售。
             </p>
             {onGoToSetup && (
               <Button
@@ -151,7 +151,7 @@ export function AiPlayground({ onGoToSetup }: { onGoToSetup?: () => void }) {
                   )}
                 >
                   <UserCircle2 className="h-3.5 w-3.5" />
-                  此处将转交人工客服
+                  此处将转交销售
                 </p>
               )}
             </div>

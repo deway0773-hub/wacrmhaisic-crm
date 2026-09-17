@@ -10,9 +10,10 @@ import {
   Mail,
   Copy,
   Check,
+  X,
   User,
   Tag as TagIcon,
-  DollarSign,
+  Briefcase,
   StickyNote,
   Plus,
 } from "lucide-react";
@@ -28,6 +29,7 @@ interface ContactSidebarProps {
 export function ContactSidebar({ contact }: ContactSidebarProps) {
   const tSidebar = useTranslations("Inbox.sidebar");
   const tThread = useTranslations("Inbox.messageThread");
+  const tCard = useTranslations("Pipelines.card");
 
   const { accountId } = useAuth();
   const [copied, setCopied] = useState(false);
@@ -213,7 +215,7 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
           {/* Active Deals */}
           <div>
             <div className="flex items-center gap-2 px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              <DollarSign className="h-3 w-3" />
+              <Briefcase className="h-3 w-3" />
               {tSidebar("deals")}
             </div>
             <div className="mt-2 space-y-2">
@@ -229,10 +231,19 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
                       {deal.title}
                     </p>
                     <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-                      <span>
-                        {deal.currency ?? "$"}
-                        {deal.value.toLocaleString()}
-                      </span>
+                      {deal.status === "won" ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                          <Check className="h-3 w-3" />
+                          {tCard("won")}
+                        </span>
+                      ) : deal.status === "lost" ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-red-400">
+                          <X className="h-3 w-3" />
+                          {tCard("lost")}
+                        </span>
+                      ) : (
+                        <span />
+                      )}
                       {deal.stage && (
                         <span
                           className="rounded-full px-1.5 py-0.5 text-[10px]"
