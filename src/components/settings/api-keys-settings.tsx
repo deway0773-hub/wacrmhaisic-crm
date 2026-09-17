@@ -37,7 +37,6 @@ import { RequireRole } from '@/components/auth/require-role';
 import { useAuth } from '@/hooks/use-auth';
 import {
   API_SCOPES,
-  SCOPE_DESCRIPTIONS,
   type ApiScope,
 } from '@/lib/api-keys/scopes';
 import { useTranslations } from 'next-intl';
@@ -435,11 +434,14 @@ function CreateKeyDialog({
                         className="mt-0.5"
                       />
                       <span className="min-w-0">
-                        <span className="text-foreground block font-mono text-xs">
+                        <span className="text-foreground block text-xs font-medium">
+                          {t(`scopeLabels.${scope}`)}
+                        </span>
+                        <span className="text-muted-foreground block font-mono text-[11px]">
                           {scope}
                         </span>
                         <span className="text-muted-foreground block text-xs">
-                          {SCOPE_DESCRIPTIONS[scope]}
+                          {t(`scopeDescriptions.${scope}`)}
                         </span>
                       </span>
                     </label>
