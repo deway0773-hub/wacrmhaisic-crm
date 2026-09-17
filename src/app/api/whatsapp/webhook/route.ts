@@ -8,6 +8,7 @@ import { findExistingContact, isUniqueViolation } from '@/lib/contacts/dedupe'
 import { reopenClosedConversation } from '@/lib/conversations/reopen'
 import { verifyMetaWebhookSignature } from '@/lib/whatsapp/webhook-signature'
 import { runAutomationsForTrigger } from '@/lib/automations/engine'
+import { assignConversation } from '@/lib/account/assign-conversation'
 import { dispatchInboundToFlows } from '@/lib/flows/engine'
 import { dispatchInboundToAiReply } from '@/lib/ai/auto-reply'
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
@@ -619,6 +620,35 @@ async function processMessage(
       conversation_id: conversation.id,
       contact_id: contactRecord.id,
     })
+
+    // Auto-assign the brand-new conversation to an eligible sales rep.
+    // The picker only considers agents who are currently online and
+    // still under their daily cap; when nobody qualifies the thread is
+    // deliberately left in the unassigned pool for a human to claim.
+    // Never let a failure here break the webhook — Meta must still get
+    // its 200 OK.
+    try {
+      const outcome = await assignConversation({
+        accountId,
+        conversationId: conversation.id,
+        assignedBy: null,
+      })
+      if (outcome.assigned) {
+        console.info(
+          '[webhook] auto-assigned new conversation:',
+          conversation.id,
+          outcome.message
+        )
+      } else {
+        console.info(
+          '[webhook] new conversation left unassigned:',
+          conversation.id,
+          outcome.message
+        )
+      }
+    } catch (err) {
+      console.error('[webhook] auto-assign failed:', err)
+    }
   }
 
   // Reactions short-circuit here — they aren't messages. We never insert
