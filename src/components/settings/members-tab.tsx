@@ -97,11 +97,11 @@ const EDITABLE_ROLES: { value: AccountRole }[] = [
 // primary (admin) → muted (agent).
 
 function fmtDate(iso: string): string {
-  // Match the rest of the dashboard's locale-light formatting.
+  // Chinese long-form date, e.g. 2026年9月18日.
   const d = new Date(iso);
-  return d.toLocaleDateString(undefined, {
+  return d.toLocaleDateString('zh-CN', {
     year: 'numeric',
-    month: 'short',
+    month: 'long',
     day: 'numeric',
   });
 }
@@ -348,77 +348,146 @@ export function MembersTab() {
                   // 128px width doesn't force the name into a 50-pixel
                   // truncation. Desktop (sm+): everything inline as
                   // before.
-                  className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
+                  className="flex flex-col gap-3 px-4 py-3"
                 >
-                  <div className="flex min-w-0 flex-1 items-center gap-4">
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={
-                          <Avatar className="size-9 shrink-0">
-                            {member.avatar_url ? (
-                              <AvatarImage
-                                src={member.avatar_url}
-                                alt={member.full_name || '成员'}
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                    <div className="flex min-w-0 flex-1 items-center gap-4">
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Avatar className="size-9 shrink-0">
+                              {member.avatar_url ? (
+                                <AvatarImage
+                                  src={member.avatar_url}
+                                  alt={member.full_name || '成员'}
+                                />
+                              ) : null}
+                              <AvatarFallback className="bg-primary/10 text-sm font-medium text-primary">
+                                {(member.full_name || member.email || 'U')
+                                  .charAt(0)
+                                  .toUpperCase()}
+                              </AvatarFallback>
+                              {/* role+label so screen readers announce
+                                  presence — the hover tooltip alone isn't
+                                  reachable by keyboard/AT on a non-focusable
+                                  avatar. */}
+                              <AvatarBadge
+                                role="img"
+                                aria-label={presenceText}
+                                className={PRESENCE_DOT_CLASS[presence]}
                               />
-                            ) : null}
-                            <AvatarFallback className="bg-primary/10 text-sm font-medium text-primary">
-                              {(member.full_name || member.email || 'U')
-                                .charAt(0)
-                                .toUpperCase()}
-                            </AvatarFallback>
-                            {/* role+label so screen readers announce
-                                presence — the hover tooltip alone isn't
-                                reachable by keyboard/AT on a non-focusable
-                                avatar. */}
-                            <AvatarBadge
-                              role="img"
-                              aria-label={presenceText}
-                              className={PRESENCE_DOT_CLASS[presence]}
-                            />
-                          </Avatar>
-                        }
-                      />
-                      <TooltipContent>{presenceText}</TooltipContent>
-                    </Tooltip>
+                            </Avatar>
+                          }
+                        />
+                        <TooltipContent>{presenceText}</TooltipContent>
+                      </Tooltip>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-medium text-foreground">
-                          {member.full_name || t('unnamed')}
-                        </span>
-                        {isSelf && (
-                          <Badge className="bg-muted text-muted-foreground border-border text-[10px] uppercase tracking-wide">
-                            {t('you')}
-                          </Badge>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-sm font-medium text-foreground">
+                            {member.full_name || t('unnamed')}
+                          </span>
+                          {isSelf && (
+                            <Badge className="bg-muted text-muted-foreground border-border text-[10px] uppercase tracking-wide">
+                              {t('you')}
+                            </Badge>
+                          )}
+                        </div>
+                        {member.email && (
+                          <p className="truncate text-xs text-muted-foreground">
+                            {member.email}
+                          </p>
                         )}
                       </div>
-                      {member.email && (
-                        <p className="truncate text-xs text-muted-foreground">
-                          {member.email}
-                        </p>
+                    </div>
+
+                    {/* Joined date stays desktop-only. The mobile row's
+                        vertical density makes the joined date noise. */}
+                    <div className="hidden sm:block text-right text-xs text-muted-foreground">
+                      {t('joined', { date: fmtDate(member.joined_at) })}
+                    </div>
+
+                    {/* Actions cluster. On mobile this is its own row
+                        below the identity block; on desktop it sits
+                        inline. Items align to the start on mobile so the
+                        role dropdown lines up under the avatar. */}
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      {/* Role display / editor. Inline Select is admin+
+                          only AND not allowed on the owner row (owner
+                          changes go through transfer, which lands later). */}
+                      {canManageMembers && !isOwnerRow && !isSelf ? (
+                        <Select
+                          value={member.role}
+                          onValueChange={(v) =>
+                            // Base UI Select can emit null on clear. We
+                            // don't expose a clear affordance, so the
+                            // guard is defensive — but the typed
+                            // signature requires it.
+                            v && handleRoleChange(member, v as AccountRole)
+                          }
+                        >
+                          <SelectTrigger
+                            className="w-32 bg-muted border-border text-foreground"
+                            disabled={isBusy}
+                          >
+                            <SelectValue>{tRoles(member.role)}</SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {EDITABLE_ROLES.map((r) => (
+                              <SelectItem key={r.value} value={r.value}>
+                                {tRoles(r.value)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium ${roleMeta.className}`}
+                        >
+                          <RoleIcon className="size-3.5" />
+                          {tRoles(member.role)}
+                        </span>
+                      )}
+
+                      {/* Remove. Admin+ only; never on the owner row;
+                          never on yourself. Pre-polish styling was
+                          neutral-default + red-on-hover — the
+                          destructive intent was invisible until the
+                          user moused over. Now red is the default
+                          state with a darker shade on hover so the
+                          affordance reads at-a-glance. */}
+                      {canManageMembers && !isOwnerRow && !isSelf && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setRemovingMember(member)}
+                          disabled={isBusy}
+                          className="border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:border-red-500/60 hover:text-red-200"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
                       )}
                     </div>
                   </div>
 
-                  {/* Joined date stays desktop-only. The mobile row's
-                      vertical density makes the joined date noise. */}
-                  <div className="hidden sm:block text-right text-xs text-muted-foreground">
-                    {t('joined', { date: fmtDate(member.joined_at) })}
-                  </div>
-
-                  {/* Actions cluster. On mobile this is its own row
-                      below the identity block; on desktop it sits
-                      inline. Items align to the start on mobile so the
-                      role dropdown lines up under the avatar. */}
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    {/* Daily assignment cap. Admin+ only; never on the
-                        owner row (the owner isn't a round-robin
-                        target). Empty = unlimited. */}
-                    {canManageMembers && !isOwnerRow && (
+                  {/* Daily assignment cap — its own row so the numeric
+                      input never crowds the role dropdown / remove
+                      button. Admin+ only; never on the owner row (the
+                      owner isn't a round-robin target). Empty =
+                      unlimited. */}
+                  {canManageMembers && !isOwnerRow && (
+                    <div className="flex items-center gap-2 border-t border-border/60 pt-3">
+                      <label
+                        htmlFor={`limit-${member.id}`}
+                        className="text-xs text-muted-foreground"
+                      >
+                        {t('limitLabel')}
+                      </label>
                       <Tooltip>
                         <TooltipTrigger
                           render={
                             <input
+                              id={`limit-${member.id}`}
                               type="number"
                               min={0}
                               step={1}
@@ -447,64 +516,8 @@ export function MembersTab() {
                           })}
                         </TooltipContent>
                       </Tooltip>
-                    )}
-
-                    {/* Role display / editor. Inline Select is admin+
-                        only AND not allowed on the owner row (owner
-                        changes go through transfer, which lands later). */}
-                    {canManageMembers && !isOwnerRow && !isSelf ? (
-                      <Select
-                        value={member.role}
-                        onValueChange={(v) =>
-                          // Base UI Select can emit null on clear. We
-                          // don't expose a clear affordance, so the
-                          // guard is defensive — but the typed
-                          // signature requires it.
-                          v && handleRoleChange(member, v as AccountRole)
-                        }
-                      >
-                        <SelectTrigger
-                          className="w-32 bg-muted border-border text-foreground"
-                          disabled={isBusy}
-                        >
-                          <SelectValue>{tRoles(member.role)}</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {EDITABLE_ROLES.map((r) => (
-                            <SelectItem key={r.value} value={r.value}>
-                              {tRoles(r.value)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium ${roleMeta.className}`}
-                      >
-                        <RoleIcon className="size-3.5" />
-                        {tRoles(member.role)}
-                      </span>
-                    )}
-
-                    {/* Remove. Admin+ only; never on the owner row;
-                        never on yourself. Pre-polish styling was
-                        neutral-default + red-on-hover — the
-                        destructive intent was invisible until the
-                        user moused over. Now red is the default
-                        state with a darker shade on hover so the
-                        affordance reads at-a-glance. */}
-                    {canManageMembers && !isOwnerRow && !isSelf && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setRemovingMember(member)}
-                        disabled={isBusy}
-                        className="border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:border-red-500/60 hover:text-red-200"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </li>
               );
             })}

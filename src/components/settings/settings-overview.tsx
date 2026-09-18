@@ -146,7 +146,7 @@ export function SettingsOverview({
   const RoleIcon = roleMeta?.icon;
 
   const themeName = THEMES.find((t) => t.id === theme)?.name ?? theme;
-  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const modeName = mode === 'light' ? t('modeLight') : t('modeDark');
 
   // Per-tile loading + subtitle. `null` counts render as a graceful
   // fallback so a single failed query never blanks a tile.
@@ -207,7 +207,7 @@ export function SettingsOverview({
     {
       section: 'appearance',
       loading: false,
-      subtitle: t('appearance', { mode: cap(mode), theme: themeName }),
+      subtitle: t('appearance', { mode: modeName, theme: themeName }),
     },
   ];
 

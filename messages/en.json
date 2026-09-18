@@ -1250,7 +1250,9 @@
       "tagsAndFields": "Tags and custom fields",
       "tagsCount": "{count} {count, plural, =1 {tag} other {tags}}",
       "fieldsCount": "{count} custom {count, plural, =1 {field} other {fields}}",
-      "appearance": "{mode} mode · {theme} accent",
+      "appearance": "{mode} · {theme} accent",
+      "modeLight": "Light mode",
+      "modeDark": "Dark mode",
       "yourAccount": "Your account",
       "loading": "Loading…"
     },
@@ -1268,7 +1270,7 @@
       "remove": "Remove",
       "removedToast": "Removed {name}",
       "updatedToast": "Updated {name} to {role}",
-      "limitLabel": "Daily assignment limit",
+      "limitLabel": "Daily new-assignment limit",
       "limitUnlimited": "Unlimited",
       "limitHint": "Max {count} new conversations assigned per day. Leave blank for unlimited.",
       "limitInvalid": "Daily limit must be an integer of 0 or more",
@@ -1619,6 +1621,8 @@
       "description": "Set the mode and accent colour used across the app. Saved to this device — try it, it changes live.",
       "mode": "Mode",
       "useMode": "Use {mode} mode",
+      "modeLight": "Light mode",
+      "modeDark": "Dark mode",
       "active": "Active",
       "accentColor": "Accent color",
       "useTheme": "Use {name} theme"

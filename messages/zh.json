@@ -1250,7 +1250,9 @@
       "tagsAndFields": "标签与自定义字段",
       "tagsCount": "{count} 个标签",
       "fieldsCount": "{count} 个自定义字段",
-      "appearance": "{mode} 模式 · {theme} 主题",
+      "appearance": "{mode} · {theme} 主题",
+      "modeLight": "浅色模式",
+      "modeDark": "深色模式",
       "yourAccount": "你的账户",
       "loading": "加载中…"
     },
@@ -1268,7 +1270,7 @@
       "remove": "移除",
       "removedToast": "已移除 {name}",
       "updatedToast": "已将 {name} 更新为 {role}",
-      "limitLabel": "每日接待上限",
+      "limitLabel": "每日最多新分配",
       "limitUnlimited": "不限",
       "limitHint": "每日最多新分配 {count} 个会话。留空表示不限。",
       "limitInvalid": "每日上限必须是不小于 0 的整数",
@@ -1451,9 +1453,9 @@
       "toastUploadFailed": "上传失败。"
     },
     "roles": {
-      "admin": "管理",
+      "admin": "管理员",
       "adminHint": "管理成员 + 所有内容",
-      "agent": "销售",
+      "agent": "成员",
       "agentHint": "可使用功能，无设置权限",
       "owner": "超级管理员",
       "ownerHint": "对账户和账单的完全控制"
@@ -1607,6 +1609,8 @@
       "description": "设置应用中使用的模式和强调色。设置会保存到此设备，并即时生效。",
       "mode": "模式",
       "useMode": "使用 {mode} 模式",
+      "modeLight": "浅色模式",
+      "modeDark": "深色模式",
       "active": "活跃",
       "accentColor": "强调色",
       "useTheme": "使用 {name} 主题"
