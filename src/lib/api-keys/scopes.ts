@@ -25,7 +25,14 @@ export const API_SCOPES = [
 
 export type ApiScope = (typeof API_SCOPES)[number];
 
-/** Human-readable descriptions, surfaced in the key-creation UI. */
+/**
+ * English fallback descriptions for each scope.
+ *
+ * NOTE: the key-creation UI no longer renders these — it reads the
+ * localized strings from `Settings.apiKeys.scopeDescriptions` so the
+ * dialog follows the active locale. Kept as the canonical English
+ * wording (and as a completeness check that every scope is described).
+ */
 export const SCOPE_DESCRIPTIONS: Record<ApiScope, string> = {
   'messages:send': 'Send WhatsApp messages',
   'messages:read': 'Read messages and their delivery status',

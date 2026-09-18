@@ -199,12 +199,30 @@ export function ProfileForm() {
       removeAvatar);
 
   const joined = user?.created_at
-    ? new Date(user.created_at).toLocaleDateString(undefined, {
+    ? new Date(user.created_at).toLocaleDateString('zh-CN', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
       })
     : '—';
+
+  // The legacy `profiles.role` column is free-form text, so map the
+  // known values to localized labels and fall back to the raw value
+  // for anything unexpected.
+  const roleLabel = (() => {
+    switch (profile?.role) {
+      case 'owner':
+        return t('roleOwner');
+      case 'admin':
+        return t('roleAdmin');
+      case 'agent':
+        return t('roleAgent');
+      case 'user':
+        return t('roleUser');
+      default:
+        return profile?.role ?? t('roleUser');
+    }
+  })();
 
   return (
     <section className="max-w-2xl animate-in fade-in-50 duration-200">
@@ -313,7 +331,7 @@ export function ProfileForm() {
               <div>
                 <dt className="text-muted-foreground">{t('role')}</dt>
                 <dd className="mt-0.5 font-mono text-foreground">
-                  {profile?.role ?? 'user'}
+                  {roleLabel}
                 </dd>
               </div>
               <div>
