@@ -2,11 +2,12 @@
 // Account role helpers — pure, unit-testable, no I/O.
 //
 // Mirrors the `account_role_enum` Postgres type from migration
-// 017_account_sharing.sql. The hierarchy is intentionally a flat
-// ordinal (owner=3 … agent=1) — it matches the same CASE
-// expression the `is_account_member(account_id, min_role)` SQL
-// helper uses, so server-side TypeScript guards and database-side
-// RLS speak the same language.
+// 017_account_sharing.sql (extended by 041 and 046). The
+// hierarchy is intentionally a flat ordinal (owner=4 … agent=1)
+// — it matches the same CASE expression the
+// `is_account_member(account_id, min_role)` SQL helper uses, so
+// server-side TypeScript guards and database-side RLS speak the
+// same language.
 //
 // Predicates (`canManageMembers`, `canEditSettings`, …) are the
 // single source of truth for "what can this role do?" — both
@@ -15,11 +16,12 @@
 // changes a one-file diff.
 // ============================================================
 
-export type AccountRole = "owner" | "admin" | "agent";
+export type AccountRole = "owner" | "admin" | "operator" | "agent";
 
 /** Ordered list of every valid role, lowest privilege first. */
 export const ACCOUNT_ROLES: readonly AccountRole[] = [
   "agent",
+  "operator",
   "admin",
   "owner",
 ] as const;
@@ -31,8 +33,10 @@ export const ACCOUNT_ROLES: readonly AccountRole[] = [
 export function roleRank(role: AccountRole): number {
   switch (role) {
     case "owner":
-      return 3;
+      return 4;
     case "admin":
+      return 3;
+    case "operator":
       return 2;
     case "agent":
       return 1;
@@ -78,8 +82,9 @@ export function canEditSettings(role: AccountRole): boolean {
 }
 
 /**
- * Owner / admin / agent: write operational data — send messages,
- * create contacts, move deals, run broadcasts, edit automations.
+ * Owner / admin / operator / agent: write operational data — send
+ * messages, create contacts, move deals, run broadcasts, edit
+ * automations.
  */
 export function canSendMessages(role: AccountRole): boolean {
   return hasMinRole(role, "agent");

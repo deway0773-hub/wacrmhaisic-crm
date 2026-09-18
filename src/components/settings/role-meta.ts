@@ -1,4 +1,5 @@
 import {
+  Briefcase,
   Crown,
   Shield,
   UserCog,
@@ -32,6 +33,12 @@ export const ROLE_META: Record<
     label: 'admin',
     variant: 'admin',
     className: 'border-primary/40 bg-primary/10 text-primary',
+  },
+  operator: {
+    icon: Briefcase,
+    label: 'operator',
+    variant: 'operator',
+    className: 'border-sky-500/40 bg-sky-500/10 text-sky-300',
   },
   agent: {
     icon: UserCog,

@@ -10,6 +10,7 @@ import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
 import {
   Bell,
   Bot,
+  Briefcase,
   Crown,
   GitBranch,
   LayoutDashboard,
@@ -49,6 +50,13 @@ const ROLE_CHIP: Record<
     // Primary-tinted: significant but not as scarce as owner.
     className:
       "border-primary/40 bg-primary/10 text-primary",
+  },
+  operator: {
+    icon: Briefcase,
+    labelKey: "roleOperator",
+    // Sky-tinted: operational lead — distinct from admin and agent.
+    className:
+      "border-sky-500/40 bg-sky-500/10 text-sky-300",
   },
   agent: {
     icon: UserCog,

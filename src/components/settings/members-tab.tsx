@@ -88,6 +88,7 @@ interface Member {
 // These roles are translated via `useTranslations("Settings.roles")` where they are used.
 const EDITABLE_ROLES: { value: AccountRole }[] = [
   { value: 'admin' },
+  { value: 'operator' },
   { value: 'agent' },
 ];
 

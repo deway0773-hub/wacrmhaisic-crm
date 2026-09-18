@@ -39,7 +39,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/use-auth';
 
-type InviteRole = 'admin' | 'agent';
+type InviteRole = 'admin' | 'operator' | 'agent';
 
 interface InviteMemberDialogProps {
   open: boolean;
@@ -278,11 +278,12 @@ export function InviteMemberDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">{tRoles('admin')}</SelectItem>
+                    <SelectItem value="operator">{tRoles('operator')}</SelectItem>
                     <SelectItem value="agent">{tRoles('agent')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  {tRoles(`${role}Hint` as 'adminHint' | 'agentHint')}
+                  {tRoles(`${role}Hint` as 'adminHint' | 'operatorHint' | 'agentHint')}
                 </p>
               </div>
 

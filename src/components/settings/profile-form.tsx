@@ -215,6 +215,8 @@ export function ProfileForm() {
         return t('roleOwner');
       case 'admin':
         return t('roleAdmin');
+      case 'operator':
+        return t('roleOperator');
       case 'agent':
         return t('roleAgent');
       case 'user':

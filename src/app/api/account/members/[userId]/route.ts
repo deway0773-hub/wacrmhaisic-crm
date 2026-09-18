@@ -55,7 +55,7 @@ export async function PATCH(
       const role = body.role;
       if (!isAccountRole(role) || role === "owner") {
         return NextResponse.json(
-          { error: "'role' must be one of admin, agent" },
+          { error: "'role' must be one of admin, operator, agent" },
           { status: 400 },
         );
       }
