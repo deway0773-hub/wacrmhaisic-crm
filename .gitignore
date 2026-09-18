@@ -39,6 +39,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# supabase local CLI state (contains secrets, never commit)
+/supabase/.temp/
+/supabase/.branches/
+/supabase/snippets/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
