@@ -36,7 +36,16 @@
  * list view reads.
  */
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Component,
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import {
   applyNodeChanges,
   Background,
@@ -139,8 +148,16 @@ function FlowNodeCard({ data, selected }: NodeProps) {
   const meta = NODE_META[node.node_type];
   const c = nodeColors(node.node_type);
   const tSummary = useTranslations('Flows.summary');
-  const summary = summarizeNode(node, tSummary);
-  const slots = outgoingSlots(node);
+  // Defensive: a malformed node (missing node_type / config) must not
+  // throw inside React-Flow's renderer — that surfaces as the red
+  // error overlay and takes the whole canvas down. Fall back to the
+  // node key / id so the card still renders something meaningful.
+  const nodeLabel =
+    (node?.node_type && t(`nodes.${node.node_type}.label`)) ||
+    node?.node_key ||
+    '?';
+  const summary = node ? summarizeNode(node, tSummary) : '';
+  const slots = node ? outgoingSlots(node) : [];
   // Start nodes are entry-only; nothing ever targets them, so they
   // don't need an incoming Handle. Every other node type accepts
   // incoming edges (including terminal handoff / end — they're the
@@ -195,7 +212,7 @@ function FlowNodeCard({ data, selected }: NodeProps) {
           className="truncate text-[10.5px] font-semibold tracking-wider uppercase"
           style={{ color: c.text }}
         >
-          {t(`nodes.${node.node_type}.label`)}
+          {nodeLabel}
         </span>
         {isEntry && (
           <span className="border-border text-muted-foreground ml-auto rounded border px-1.5 py-0.5 text-[8.5px] font-bold tracking-[0.1em] uppercase">
@@ -204,7 +221,7 @@ function FlowNodeCard({ data, selected }: NodeProps) {
         )}
       </div>
       <div className="text-muted-foreground mt-2 truncate font-mono text-[11px]">
-        {node.node_key}
+        {node?.node_key || '?'}
       </div>
       {summary && (
         <div className="text-muted-foreground mt-1 line-clamp-2 text-xs leading-relaxed">
@@ -268,8 +285,59 @@ const NODE_TYPES = { flow: FlowNodeCard };
 export function FlowCanvas() {
   return (
     <ReactFlowProvider>
-      <FlowCanvasInner />
+      <FlowCanvasErrorBoundary>
+        <FlowCanvasInner />
+      </FlowCanvasErrorBoundary>
     </ReactFlowProvider>
+  );
+}
+
+/**
+ * Catches render-time crashes from malformed flow data (missing
+ * node_type, bad config shape, etc.) so a single bad node can't take
+ * the whole page down with React's red error overlay. Offers a reset
+ * that re-fetches the flow from the server via the editor context.
+ */
+class FlowCanvasErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    // eslint-disable-next-line no-console
+    console.error('[flow-canvas] render error', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <FlowCanvasFallback onReset={() => this.setState({ hasError: false })} />;
+    }
+    return this.props.children;
+  }
+}
+
+function FlowCanvasFallback({ onReset }: { onReset: () => void }) {
+  const t = useTranslations('Flows.builder');
+  const { resetFlow } = useFlowEditor();
+  return (
+    <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-3 text-sm">
+      <p>{t('canvasError')}</p>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          resetFlow();
+          onReset();
+        }}
+      >
+        {t('canvasReset')}
+      </Button>
+    </div>
   );
 }
 
@@ -626,6 +694,10 @@ function NodeEditSheet({
   }
   const meta = NODE_META[node.node_type];
   const c = nodeColors(node.node_type);
+  const nodeLabel =
+    (node?.node_type && t(`nodes.${node.node_type}.label`)) ||
+    node?.node_key ||
+    '?';
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent
@@ -636,7 +708,7 @@ function NodeEditSheet({
           <NodeIconChip type={node.node_type} size={36} iconSize={18} />
           <div className="min-w-0 flex-1">
             <SheetTitle className="flex items-center gap-2 text-[11px] font-semibold tracking-wider uppercase">
-              <span style={{ color: c.text }}>{t(`nodes.${node.node_type}.label`)}</span>
+              <span style={{ color: c.text }}>{nodeLabel}</span>
               {isEntry && (
                 <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-semibold tracking-wider text-emerald-300 uppercase">
                   {t('badgeEntry')}
@@ -644,7 +716,7 @@ function NodeEditSheet({
               )}
             </SheetTitle>
             <SheetDescription className="text-muted-foreground mt-0.5 text-xs">
-              {t(`nodes.${node.node_type}.blurb`)}
+              {(node?.node_type && t(`nodes.${node.node_type}.blurb`)) || ''}
             </SheetDescription>
           </div>
           <code className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px]">
@@ -772,10 +844,10 @@ function CanvasAddNodeButton({ t }: { t: ReturnType<typeof useTranslations> }) {
                     />
                     <span className="flex flex-col">
                       <span className="text-popover-foreground text-[13px] font-semibold">
-                        {t(`nodes.${t_type}.label`)}
+                        {t(`nodes.${t_type}.label`) || t_type}
                       </span>
                       <span className="text-muted-foreground text-[11.5px]">
-                        {t(`nodes.${t_type}.blurb`)}
+                        {t(`nodes.${t_type}.blurb`) || ''}
                       </span>
                     </span>
                   </DropdownMenuItem>

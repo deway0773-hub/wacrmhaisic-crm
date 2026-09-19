@@ -23,6 +23,8 @@
  */
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   CircleDot,
@@ -36,6 +38,16 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import {
   useFlowEditor,
@@ -44,6 +56,8 @@ import {
 
 export function EditorHeader() {
   const router = useRouter();
+  const t = useTranslations("Flows.builder");
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const {
     flow,
     state,
@@ -109,7 +123,7 @@ export function EditorHeader() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => void deleteFlow()}
+            onClick={() => setConfirmOpen(true)}
             className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -170,25 +184,46 @@ export function EditorHeader() {
         aria-label="流程描述"
         className="w-full max-w-[78ch] rounded-md border border-transparent bg-transparent px-2 py-1 text-[13px] text-muted-foreground outline-none transition-colors placeholder:text-muted-foreground/60 hover:bg-muted/50 focus:border-primary focus:bg-transparent focus:text-foreground"
       />
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("deleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("deleteDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("deleteCancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void deleteFlow()}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {t("deleteConfirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
 function StatusChip({ status }: { status: BuilderState["status"] }) {
+  const t = useTranslations("Flows.list");
   const cfg = {
     draft: {
       // Neutral, not amber — amber is reserved for the adjacent
       // "Edited" dirty signal, so the two don't read as the same alert.
       cls: "border-border bg-muted text-muted-foreground",
-      label: "Draft",
+      label: t("statusDraft"),
     },
     active: {
       cls: "border-emerald-600/40 bg-emerald-500/10 text-emerald-300",
-      label: "Active",
+      label: t("statusActive"),
     },
     archived: {
       cls: "border-border bg-muted/50 text-muted-foreground",
-      label: "Archived",
+      label: t("statusArchived"),
     },
   }[status];
   return (

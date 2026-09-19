@@ -107,6 +107,14 @@ export interface FlowEditorContextValue {
   save: () => Promise<void>;
   setStatus: (status: BuilderState["status"]) => Promise<void>;
   deleteFlow: () => Promise<void>;
+  /**
+   * Re-hydrate the editor from the last persisted server state.
+   * Used by the canvas ErrorBoundary's "reset" affordance: when a
+   * malformed node payload crashes ReactFlow, the user can recover
+   * without a full page reload (which would lose the crash context
+   * and any unsaved-but-valid edits elsewhere).
+   */
+  resetFlow: () => Promise<void>;
 
   /**
    * Transient "look here" signal. Set when the validation panel's
@@ -401,11 +409,10 @@ export function FlowEditorProvider({
   );
 
   // ---- Delete ----
+  // Confirmation is owned by the caller (header / list page) via the
+  // AlertDialog component — this function performs the destructive
+  // request only, so the same logic backs both entry points.
   const deleteFlow = useCallback(async () => {
-    const yes = window.confirm(
-      `Delete "${state.name}"? Any active runs end immediately. This can't be undone.`,
-    );
-    if (!yes) return;
     try {
       const res = await fetch(`/api/flows/${initialFlow.id}`, {
         method: "DELETE",
@@ -416,7 +423,45 @@ export function FlowEditorProvider({
       const msg = err instanceof Error ? err.message : "Delete failed";
       toast.error(msg);
     }
-  }, [initialFlow.id, router, state.name]);
+  }, [initialFlow.id, router]);
+
+  // ---- Reset (recover from a canvas crash) ----
+  // Re-fetch the persisted flow + nodes and rebuild the editor state
+  // from scratch. Deliberately does NOT touch `dirty`: a crash means
+  // the in-memory state is suspect, so we drop it and treat the
+  // server copy as the new baseline.
+  const resetFlow = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/flows/${initialFlow.id}`, {
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error(`Reload failed: ${res.status}`);
+      const json = (await res.json()) as {
+        flow: FlowRow;
+        nodes: FlowNodeRow[];
+      };
+      setStateRaw({
+        name: json.flow.name,
+        description: json.flow.description ?? "",
+        trigger_type: json.flow.trigger_type,
+        trigger_config: json.flow.trigger_config as Record<string, unknown>,
+        entry_node_id: json.flow.entry_node_id,
+        status: json.flow.status,
+        nodes: (json.nodes ?? []).map((n) => ({
+          node_key: n.node_key,
+          node_type: n.node_type as NodeType,
+          config: n.config as Record<string, unknown>,
+          position_x: n.position_x,
+          position_y: n.position_y,
+        })),
+      });
+      setDirty(false);
+      toast.success(t("reset"));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Reload failed";
+      toast.error(msg);
+    }
+  }, [initialFlow.id, t]);
 
   // ---- Node mutations ----
   const updateNode = useCallback(
@@ -537,6 +582,7 @@ export function FlowEditorProvider({
       save,
       setStatus,
       deleteFlow,
+      resetFlow,
       flashKey,
       requestFlash,
     }),
@@ -558,6 +604,7 @@ export function FlowEditorProvider({
       save,
       setStatus,
       deleteFlow,
+      resetFlow,
       flashKey,
       requestFlash,
     ],

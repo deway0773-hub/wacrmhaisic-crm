@@ -1025,7 +1025,10 @@
       "loadError": "Couldn't load flows.",
       "createError": "Couldn't create flow.",
       "cloneError": "Clone failed",
+      "deleteTitle": "Delete this flow?",
       "deleteConfirm": "Delete \"{name}\"? Any active runs will end immediately.",
+      "deleteCancel": "Cancel",
+      "deleteConfirmAction": "Delete",
       "deleteSuccess": "Flow deleted.",
       "deleteError": "Couldn't delete flow.",
       "emptyTitle": "No flows yet",
@@ -1097,6 +1100,12 @@
       "listView": "List",
       "noNodeSelected": "No node selected",
       "noNodeDesc": "Select a node on the canvas to edit its configuration.",
+      "deleteTitle": "Delete this flow?",
+      "deleteDescription": "This action cannot be undone.",
+      "deleteCancel": "Cancel",
+      "deleteConfirm": "Delete",
+      "canvasError": "Flow data is invalid. Click to reset.",
+      "canvasReset": "Reset",
       "form": {
         "advancesTo": "Advances to",
         "textToCustomer": "Text sent to the customer",
@@ -1214,7 +1223,8 @@
       "fixIssues": "Fix the issues below before activating.",
       "statusActivated": "Flow activated.",
       "statusArchived": "Archived.",
-      "statusDraft": "Saved as draft."
+      "statusDraft": "Saved as draft.",
+      "reset": "Flow reset."
     },
     "summary": {
       "options": "{count} {count, plural, =1 {option} other {options}}",
