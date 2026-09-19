@@ -167,8 +167,17 @@ describe('pickAssignee', () => {
   })
 
   it('does not count an away agent as online', () => {
+    // Presence is now derived from last_seen age: a heartbeat older
+    // than the 5-minute online window reads as 'away', which is not
+    // eligible for assignment.
     const res = pickAssignee(
-      [candidate({ userId: 'away', storedPresence: 'away' })],
+      [
+        candidate({
+          userId: 'away',
+          storedPresence: 'away',
+          lastSeenAt: new Date(NOW - 10 * 60_000).toISOString(),
+        }),
+      ],
       NOW,
     )
     expect(res.agentId).toBeNull()

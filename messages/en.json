@@ -60,7 +60,9 @@
     "menuSignOut": "Sign out"
   },
   "ModeToggle": {
-    "switchMode": "Switch to {mode} mode"
+    "switchMode": "Switch to {mode}",
+    "light": "Light mode",
+    "dark": "Dark mode"
   },
   "AccountAccess": {
     "unlinkedTitle": "This user is not linked to an account",

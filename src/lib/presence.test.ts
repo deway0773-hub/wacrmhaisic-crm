@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   OFFLINE_AFTER_MS,
+  ONLINE_WITHIN_MS,
   derivePresence,
   formatLastSeen,
   presenceLabel,
@@ -13,17 +14,24 @@ const NOW = new Date("2026-06-22T12:00:00.000Z").getTime();
 const ago = (ms: number) => new Date(NOW - ms).toISOString();
 
 describe("derivePresence", () => {
-  it("returns the stored status for a fresh heartbeat", () => {
+  it("reads as online within the 5-minute window", () => {
     expect(derivePresence("online", ago(1_000), NOW)).toBe("online");
-    expect(derivePresence("away", ago(1_000), NOW)).toBe("away");
+    expect(derivePresence("away", ago(1_000), NOW)).toBe("online");
+    expect(derivePresence(undefined, ago(ONLINE_WITHIN_MS), NOW)).toBe("online");
   });
 
-  it("reads as offline when the heartbeat is stale", () => {
-    expect(derivePresence("online", ago(OFFLINE_AFTER_MS + 1_000), NOW)).toBe(
+  it("reads as away between 5 and 30 minutes", () => {
+    expect(derivePresence("online", ago(ONLINE_WITHIN_MS + 1), NOW)).toBe(
+      "away",
+    );
+    expect(derivePresence("online", ago(OFFLINE_AFTER_MS), NOW)).toBe("away");
+  });
+
+  it("reads as offline past 30 minutes", () => {
+    expect(derivePresence("online", ago(OFFLINE_AFTER_MS + 1), NOW)).toBe(
       "offline",
     );
-    // Stored 'away' goes stale to offline too (tab was closed while idle).
-    expect(derivePresence("away", ago(OFFLINE_AFTER_MS + 1_000), NOW)).toBe(
+    expect(derivePresence("away", ago(OFFLINE_AFTER_MS + 1), NOW)).toBe(
       "offline",
     );
   });
@@ -32,13 +40,6 @@ describe("derivePresence", () => {
     expect(derivePresence(undefined, null, NOW)).toBe("offline");
     expect(derivePresence("online", null, NOW)).toBe("offline");
     expect(derivePresence("online", "not-a-date", NOW)).toBe("offline");
-  });
-
-  it("stays online exactly at the threshold and flips just past it", () => {
-    expect(derivePresence("online", ago(OFFLINE_AFTER_MS), NOW)).toBe("online");
-    expect(derivePresence("online", ago(OFFLINE_AFTER_MS + 1), NOW)).toBe(
-      "offline",
-    );
   });
 });
 

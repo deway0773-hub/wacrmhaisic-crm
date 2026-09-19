@@ -16,11 +16,16 @@
 export const HEARTBEAT_MS = 30_000;
 
 /**
- * A member whose last heartbeat is older than this is treated as
- * offline regardless of its stored status. ~2.5 missed beats, so a
- * single dropped heartbeat doesn't flap a member offline.
+ * A member whose last heartbeat is within this window reads as
+ * 'online'. Past it (but within AWAY_AFTER_MS) they read as 'away'.
  */
-export const OFFLINE_AFTER_MS = 75_000;
+export const ONLINE_WITHIN_MS = 5 * 60_000;
+
+/**
+ * A member whose last heartbeat is older than this reads as
+ * 'offline' regardless of its stored status.
+ */
+export const OFFLINE_AFTER_MS = 30 * 60_000;
 
 /** No input / hidden tab for this long flips the client to 'away'. */
 export const IDLE_AFTER_MS = 5 * 60_000;
@@ -38,20 +43,27 @@ export interface PresenceRow {
 }
 
 /**
- * Derive the user-facing presence for a member. A missing row, or a
- * heartbeat staler than OFFLINE_AFTER_MS, reads as offline; otherwise
- * the member's last reported status (online / away) stands.
+ * Derive the user-facing presence for a member from how recently they
+ * last checked in:
+ *   - last_seen within ONLINE_WITHIN_MS (5 min)  → 'online'
+ *   - last_seen within OFFLINE_AFTER_MS (30 min) → 'away'
+ *   - anything older (or missing)                → 'offline'
+ *
+ * The stored status is intentionally ignored: a stale 'online' row
+ * must not keep a closed tab looking active.
  */
 export function derivePresence(
   stored: StoredPresence | undefined,
   lastSeenAt: string | null | undefined,
   now: number,
 ): PresenceStatus {
-  if (!stored || !lastSeenAt) return "offline";
+  if (!lastSeenAt) return "offline";
   const last = new Date(lastSeenAt).getTime();
   if (Number.isNaN(last)) return "offline";
-  if (now - last > OFFLINE_AFTER_MS) return "offline";
-  return stored;
+  const age = now - last;
+  if (age <= ONLINE_WITHIN_MS) return "online";
+  if (age <= OFFLINE_AFTER_MS) return "away";
+  return "offline";
 }
 
 /**
