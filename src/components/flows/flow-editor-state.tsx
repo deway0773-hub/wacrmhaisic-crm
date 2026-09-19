@@ -142,6 +142,22 @@ export function uniqueNodeKey(base: string, existing: BuilderNode[]): string {
   return `${base}_${i}`;
 }
 
+/**
+ * Pull a friendly display name out of a node's config JSONB. Template
+ * clones persist their Chinese label into `config.label`; user-created
+ * nodes have none, so this returns undefined and the UI falls back to
+ * the raw `node_key`.
+ */
+export function labelFromConfig(
+  config: Record<string, unknown> | null | undefined
+): string | undefined {
+  if (!config) return undefined;
+  const label = config.label;
+  return typeof label === "string" && label.trim().length > 0
+    ? label
+    : undefined;
+}
+
 export function defaultConfigFor(type: NodeType): Record<string, unknown> {
   switch (type) {
     case "start":
@@ -151,17 +167,17 @@ export function defaultConfigFor(type: NodeType): Record<string, unknown> {
     case "send_buttons":
       return {
         text: "",
-        buttons: [{ reply_id: "yes", title: "Yes", next_node_key: "" }],
+        buttons: [{ reply_id: "yes", title: "是", next_node_key: "" }],
       };
     case "send_list":
       return {
         text: "",
-        button_label: "View options",
+        button_label: "查看选项",
         sections: [
           {
             title: "",
             rows: [
-              { reply_id: "row_1", title: "Option 1", next_node_key: "" },
+              { reply_id: "row_1", title: "选项 1", next_node_key: "" },
             ],
           },
         ],
@@ -259,6 +275,7 @@ export function FlowEditorProvider({
       node_key: n.node_key,
       node_type: n.node_type as NodeType,
       config: n.config as Record<string, unknown>,
+      label: labelFromConfig(n.config),
       position_x: n.position_x,
       position_y: n.position_y,
     })),
@@ -354,17 +371,17 @@ export function FlowEditorProvider({
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        throw new Error(json.error ?? `Save failed: ${res.status}`);
+        throw new Error(json.error ?? t("saveFailed", { status: res.status }));
       }
       setDirty(false);
       toast.success(t("saved"));
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Save failed";
+      const msg = err instanceof Error ? err.message : t("saveFailed", { status: "" });
       toast.error(msg);
     } finally {
       setSaving(false);
     }
-  }, [initialFlow.id, state]);
+  }, [initialFlow.id, state, t]);
 
   // ---- Activate / Pause / Archive ----
   const setStatus = useCallback(
@@ -388,7 +405,7 @@ export function FlowEditorProvider({
         });
         if (!res.ok) {
           const json = await res.json().catch(() => ({}));
-          throw new Error(json.error ?? `Status update failed: ${res.status}`);
+          throw new Error(json.error ?? t("statusUpdateFailed", { status: res.status }));
         }
         setStateRaw((s) => ({ ...s, status: next }));
         toast.success(
@@ -399,13 +416,13 @@ export function FlowEditorProvider({
               : t("statusDraft")
         );
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Status update failed";
+        const msg = err instanceof Error ? err.message : t("statusUpdateFailed", { status: "" });
         toast.error(msg);
       } finally {
         setActivating(false);
       }
     },
-    [canActivate, save, initialFlow.id],
+    [canActivate, save, initialFlow.id, t],
   );
 
   // ---- Delete ----
@@ -417,13 +434,13 @@ export function FlowEditorProvider({
       const res = await fetch(`/api/flows/${initialFlow.id}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+      if (!res.ok) throw new Error(t("deleteFailed", { status: res.status }));
       router.push("/flows");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Delete failed";
+      const msg = err instanceof Error ? err.message : t("deleteFailed", { status: "" });
       toast.error(msg);
     }
-  }, [initialFlow.id, router]);
+  }, [initialFlow.id, router, t]);
 
   // ---- Reset (recover from a canvas crash) ----
   // Re-fetch the persisted flow + nodes and rebuild the editor state
@@ -435,7 +452,7 @@ export function FlowEditorProvider({
       const res = await fetch(`/api/flows/${initialFlow.id}`, {
         cache: "no-store",
       });
-      if (!res.ok) throw new Error(`Reload failed: ${res.status}`);
+      if (!res.ok) throw new Error(t("reloadFailed", { status: res.status }));
       const json = (await res.json()) as {
         flow: FlowRow;
         nodes: FlowNodeRow[];
@@ -451,6 +468,7 @@ export function FlowEditorProvider({
           node_key: n.node_key,
           node_type: n.node_type as NodeType,
           config: n.config as Record<string, unknown>,
+          label: labelFromConfig(n.config),
           position_x: n.position_x,
           position_y: n.position_y,
         })),
@@ -458,7 +476,7 @@ export function FlowEditorProvider({
       setDirty(false);
       toast.success(t("reset"));
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Reload failed";
+      const msg = err instanceof Error ? err.message : t("reloadFailed", { status: "" });
       toast.error(msg);
     }
   }, [initialFlow.id, t]);

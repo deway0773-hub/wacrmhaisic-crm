@@ -37,7 +37,10 @@ export interface CanvasEdge {
   label?: string;
 }
 
-export function deriveCanvasEdges(nodes: BuilderNode[]): CanvasEdge[] {
+export function deriveCanvasEdges(
+  nodes: BuilderNode[],
+  t?: SlotLabelTranslator,
+): CanvasEdge[] {
   const knownKeys = new Set(nodes.map((n) => n.node_key));
   const edges: CanvasEdge[] = [];
 
@@ -70,7 +73,7 @@ export function deriveCanvasEdges(nodes: BuilderNode[]): CanvasEdge[] {
             source: node.node_key,
             target: trueNext,
             sourceHandle: "true",
-            label: "true",
+            label: t ? t("slotTrue") : "true",
           });
         }
         if (falseNext && knownKeys.has(falseNext)) {
@@ -79,7 +82,7 @@ export function deriveCanvasEdges(nodes: BuilderNode[]): CanvasEdge[] {
             source: node.node_key,
             target: falseNext,
             sourceHandle: "false",
-            label: "false",
+            label: t ? t("slotFalse") : "false",
           });
         }
         break;
@@ -171,7 +174,20 @@ export interface OutgoingSlot {
   label: string;
 }
 
-export function outgoingSlots(node: BuilderNode): OutgoingSlot[] {
+/**
+ * Optional translator for the built-in slot labels ("Next" / "true" /
+ * "false"). User-authored labels (button titles, list row titles) are
+ * passed through untouched. When omitted, English defaults are used
+ * so pure-data callers (tests, server code) keep working.
+ */
+export type SlotLabelTranslator = (
+  key: "slotNext" | "slotTrue" | "slotFalse",
+) => string;
+
+export function outgoingSlots(
+  node: BuilderNode,
+  t?: SlotLabelTranslator,
+): OutgoingSlot[] {
   const cfg = node.config;
   switch (node.node_type) {
     case "start":
@@ -179,12 +195,12 @@ export function outgoingSlots(node: BuilderNode): OutgoingSlot[] {
     case "send_media":
     case "collect_input":
     case "set_tag":
-      return [{ id: "next", label: "Next" }];
+      return [{ id: "next", label: t ? t("slotNext") : "Next" }];
 
     case "condition":
       return [
-        { id: "true", label: "true" },
-        { id: "false", label: "false" },
+        { id: "true", label: t ? t("slotTrue") : "true" },
+        { id: "false", label: t ? t("slotFalse") : "false" },
       ];
 
     case "send_buttons": {

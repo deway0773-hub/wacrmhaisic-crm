@@ -91,6 +91,7 @@ import {
   NodeIconChip,
   groupNodeTypesByCategory,
   nodeColors,
+  nodeDisplayName,
   summarizeNode,
   type BuilderNode,
   type NodeType,
@@ -156,8 +157,11 @@ function FlowNodeCard({ data, selected }: NodeProps) {
     (node?.node_type && t(`nodes.${node.node_type}.label`)) ||
     node?.node_key ||
     '?';
+  const displayName = node ? nodeDisplayName(node) : '?';
   const summary = node ? summarizeNode(node, tSummary) : '';
-  const slots = node ? outgoingSlots(node) : [];
+  const slots = node
+    ? outgoingSlots(node, (key) => t(key))
+    : [];
   // Start nodes are entry-only; nothing ever targets them, so they
   // don't need an incoming Handle. Every other node type accepts
   // incoming edges (including terminal handoff / end — they're the
@@ -221,7 +225,10 @@ function FlowNodeCard({ data, selected }: NodeProps) {
         )}
       </div>
       <div className="text-muted-foreground mt-2 truncate font-mono text-[11px]">
-        {node?.node_key || '?'}
+        {displayName}
+        {displayName !== node?.node_key && (
+          <span className="ml-1 opacity-60">({node?.node_key})</span>
+        )}
       </div>
       {summary && (
         <div className="text-muted-foreground mt-1 line-clamp-2 text-xs leading-relaxed">
@@ -427,7 +434,7 @@ function FlowCanvasInner() {
   }, [derivedRfNodes]);
 
   const rfEdges = useMemo(() => {
-    const canvasEdges = deriveCanvasEdges(builderNodes);
+    const canvasEdges = deriveCanvasEdges(builderNodes, t);
 
     // sourceHandle is now wired up — the FlowNodeCard renders a Handle
     // per slot whose id matches the scheme in edges.ts, so React-Flow
@@ -447,7 +454,7 @@ function FlowCanvasInner() {
     }));
 
     return rfEdges;
-  }, [builderNodes]);
+  }, [builderNodes, t]);
 
   const handleNodesChange = useCallback(
     (changes: NodeChange<RfNode<NodeData>>[]) => {
@@ -698,6 +705,7 @@ function NodeEditSheet({
     (node?.node_type && t(`nodes.${node.node_type}.label`)) ||
     node?.node_key ||
     '?';
+  const displayName = nodeDisplayName(node);
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent
@@ -716,7 +724,10 @@ function NodeEditSheet({
               )}
             </SheetTitle>
             <SheetDescription className="text-muted-foreground mt-0.5 text-xs">
-              {(node?.node_type && t(`nodes.${node.node_type}.blurb`)) || ''}
+              {displayName}
+              {displayName !== node.node_key && (
+                <span className="ml-1 opacity-60">({node.node_key})</span>
+              )}
             </SheetDescription>
           </div>
           <code className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px]">

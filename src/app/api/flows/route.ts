@@ -133,7 +133,11 @@ export async function POST(request: Request) {
           flow_id: flow.id,
           node_key: n.node_key,
           node_type: n.node_type,
-          config: n.config,
+          // Persist the template's friendly display name into the
+          // node's config JSONB so the editor can render a Chinese
+          // label instead of the raw node_key slug. No schema change
+          // needed — config is already JSONB.
+          config: n.label ? { ...n.config, label: n.label } : n.config,
         })),
       )
       if (nodesErr) {

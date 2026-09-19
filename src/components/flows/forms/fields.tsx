@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
-import { NODE_META, type BuilderNode } from "../shared";
+import { NODE_META, nodeDisplayName, type BuilderNode } from "../shared";
 
 export function TextRow({
   label,
@@ -125,7 +125,8 @@ export function NodeKeySelect({
                 <Icon
                   className={cn("h-3 w-3", NODE_META[n.node_type].color)}
                 />
-                {n.node_key}
+                {t("gotoPrefix")}
+                {nodeDisplayName(n)}
               </span>
             </SelectItem>
           );

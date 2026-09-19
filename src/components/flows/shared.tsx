@@ -56,10 +56,35 @@ export interface BuilderNode {
   node_key: string;
   node_type: NodeType;
   config: Record<string, unknown>;
+  /**
+   * Optional human-readable display name (e.g. "开始", "回复-营业时间").
+   * Sourced from `config.label` when a flow is cloned from a template,
+   * or set by the user. When absent the UI falls back to `node_key`.
+   */
+  label?: string;
   /** Optional in v1 — defaults to 0 in the DB. Canvas view reads it
    *  to position nodes; list view ignores it. */
   position_x?: number;
   position_y?: number;
+}
+
+/**
+ * Resolve the friendly display name for a node: an explicit `label`
+ * (from `config.label` or the node itself) wins, otherwise fall back
+ * to the raw `node_key` slug. Used everywhere the editor shows a node
+ * name so template nodes read as Chinese ("开始") instead of the
+ * underlying identifier ("start").
+ */
+export function nodeDisplayName(node: {
+  node_key: string;
+  label?: string;
+  config?: Record<string, unknown>;
+}): string {
+  const fromConfig =
+    node.config && typeof node.config.label === 'string'
+      ? node.config.label
+      : undefined;
+  return node.label || fromConfig || node.node_key;
 }
 
 // ============================================================

@@ -53,6 +53,7 @@ import {
   NodeIconChip,
   groupNodeTypesByCategory,
   nodeColors,
+  nodeDisplayName,
   slugify,
   summarizeNode,
   type BuilderNode,
@@ -439,9 +440,14 @@ function NodeCard({
             >
               {t(`nodes.${node.node_type}.label`)}
             </span>
-            <code className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[10px]">
-              {node.node_key}
-            </code>
+            <span className="text-foreground truncate text-xs font-medium">
+              {nodeDisplayName(node)}
+            </span>
+            {nodeDisplayName(node) !== node.node_key && (
+              <code className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[10px]">
+                {node.node_key}
+              </code>
+            )}
             {isEntry && (
               <Badge
                 variant="outline"

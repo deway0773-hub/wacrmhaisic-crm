@@ -44,6 +44,13 @@ export type FlowTemplateNodeType =
 export interface FlowTemplateNode {
   node_key: string;
   node_type: FlowTemplateNodeType;
+  /**
+   * Human-readable display name shown in the editor (list + canvas).
+   * Persisted into the node's `config.label` on clone so the UI can
+   * render a friendly Chinese name instead of the raw `node_key`
+   * slug. Optional — nodes without a label fall back to `node_key`.
+   */
+  label?: string;
   config:
     | StartNodeConfig
     | SendMessageNodeConfig
@@ -83,11 +90,13 @@ const WELCOME_MENU: FlowTemplate = {
     {
       node_key: "start",
       node_type: "start",
+      label: "开始",
       config: { next_node_key: "welcome" },
     },
     {
       node_key: "welcome",
       node_type: "send_buttons",
+      label: "欢迎语",
       config: {
         text: "你好！👋 欢迎咨询。请问你是老客户还是新客户？",
         footer_text: "点击下方按钮继续。",
@@ -108,6 +117,7 @@ const WELCOME_MENU: FlowTemplate = {
     {
       node_key: "existing_handoff",
       node_type: "handoff",
+      label: "老客户转接",
       config: {
         note: "老客户需要协助——回复前请先查看其账户历史。",
       } as HandoffNodeConfig,
@@ -115,6 +125,7 @@ const WELCOME_MENU: FlowTemplate = {
     {
       node_key: "new_handoff",
       node_type: "handoff",
+      label: "新客户转接",
       config: {
         note: "新客户——发送价格信息和引导链接。",
       } as HandoffNodeConfig,
@@ -141,11 +152,13 @@ const FAQ_BOT: FlowTemplate = {
     {
       node_key: "start",
       node_type: "start",
+      label: "开始",
       config: { next_node_key: "topics" },
     },
     {
       node_key: "topics",
       node_type: "send_list",
+      label: "选择主题",
       config: {
         text: "请问你需要什么帮助？",
         button_label: "查看主题",
@@ -186,6 +199,7 @@ const FAQ_BOT: FlowTemplate = {
     {
       node_key: "answer_hours",
       node_type: "send_message",
+      label: "回复-营业时间",
       config: {
         text: "我们的营业时间是周一至周五 9:00–18:00（当地时间）。周末仅处理紧急问题。",
         next_node_key: "end",
@@ -194,6 +208,7 @@ const FAQ_BOT: FlowTemplate = {
     {
       node_key: "answer_pricing",
       node_type: "send_message",
+      label: "回复-价格",
       config: {
         text: "我们的价格每月 9 美元起。访问 https://example.com/pricing 查看完整价格说明。",
         next_node_key: "end",
@@ -202,6 +217,7 @@ const FAQ_BOT: FlowTemplate = {
     {
       node_key: "answer_refunds",
       node_type: "send_message",
+      label: "回复-退款",
       config: {
         text: "购买后 30 天内可申请退款。请回复你的订单号，我们会为你处理。",
         next_node_key: "end",
@@ -210,6 +226,7 @@ const FAQ_BOT: FlowTemplate = {
     {
       node_key: "human_handoff",
       node_type: "handoff",
+      label: "转人工",
       config: {
         note: "客户在常见问题机器人中请求转人工。",
       } as HandoffNodeConfig,
@@ -217,6 +234,7 @@ const FAQ_BOT: FlowTemplate = {
     {
       node_key: "end",
       node_type: "end",
+      label: "结束",
       config: {},
     },
   ],
@@ -238,11 +256,13 @@ const LEAD_CAPTURE: FlowTemplate = {
     {
       node_key: "start",
       node_type: "start",
+      label: "开始",
       config: { next_node_key: "intro" },
     },
     {
       node_key: "intro",
       node_type: "send_message",
+      label: "欢迎语",
       config: {
         text: "欢迎！👋 我会问几个简单的问题，以便帮你找到合适的对接人。",
         next_node_key: "ask_name",
@@ -251,6 +271,7 @@ const LEAD_CAPTURE: FlowTemplate = {
     {
       node_key: "ask_name",
       node_type: "collect_input",
+      label: "询问姓名",
       config: {
         prompt_text: "请问你的姓名是？",
         var_key: "name",
@@ -260,6 +281,7 @@ const LEAD_CAPTURE: FlowTemplate = {
     {
       node_key: "ask_email",
       node_type: "collect_input",
+      label: "询问邮箱",
       config: {
         prompt_text: "谢谢 {{vars.name}}！请问你的工作邮箱是？",
         var_key: "email",
@@ -269,6 +291,7 @@ const LEAD_CAPTURE: FlowTemplate = {
     {
       node_key: "ask_company",
       node_type: "collect_input",
+      label: "询问公司",
       config: {
         prompt_text: "快完成了——请问你的公司名称是？",
         var_key: "company",
@@ -278,6 +301,7 @@ const LEAD_CAPTURE: FlowTemplate = {
     {
       node_key: "handoff",
       node_type: "handoff",
+      label: "转交销售",
       config: {
         note: "新线索——姓名={{vars.name}}，邮箱={{vars.email}}，公司={{vars.company}}。",
       } as HandoffNodeConfig,

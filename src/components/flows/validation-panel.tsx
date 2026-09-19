@@ -92,7 +92,7 @@ export function IssueLine({
             {issue.node_key}
           </code>
         )}
-        {issue.message}
+        {t ? t(issue.code, issue.params) : issue.message}
       </span>
     </>
   );
