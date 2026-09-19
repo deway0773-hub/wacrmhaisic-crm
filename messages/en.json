@@ -1137,6 +1137,11 @@
         "fieldLabel": "Field",
         "pickTag": "Pick a tag…",
         "pickField": "Pick a field…",
+        "replyIdPlaceholder": "reply_id",
+        "fieldName": "Name",
+        "fieldEmail": "Email",
+        "fieldPhone": "Phone",
+        "fieldCompany": "Company",
         "operatorLabel": "Operator",
         "isPresent": "is present",
         "isAbsent": "is absent",
@@ -1163,6 +1168,9 @@
         "filenamePlaceholder": "invoice.pdf",
         "advanceAfterSending": "After sending, advance to",
         "pickNextNode": "Pick a next node…",
+        "uploadSuccess": "File uploaded.",
+        "uploadFailed": "Upload failed.",
+        "fileTooLarge": "File is {size} MB — limit is 16 MB.",
         "none": "— None —"
       },
       "categories": {

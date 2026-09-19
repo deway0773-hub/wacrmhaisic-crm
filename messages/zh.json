@@ -1137,6 +1137,11 @@
         "fieldLabel": "字段",
         "pickTag": "选择标签…",
         "pickField": "选择字段…",
+        "replyIdPlaceholder": "回复 ID",
+        "fieldName": "姓名",
+        "fieldEmail": "邮箱",
+        "fieldPhone": "电话",
+        "fieldCompany": "公司",
         "operatorLabel": "运算符",
         "isPresent": "存在",
         "isAbsent": "不存在",
@@ -1163,6 +1168,9 @@
         "filenamePlaceholder": "invoice.pdf",
         "advanceAfterSending": "发送后，推进到",
         "pickNextNode": "选择下一个节点…",
+        "uploadSuccess": "文件已上传。",
+        "uploadFailed": "上传失败。",
+        "fileTooLarge": "文件为 {size} MB — 上限为 16 MB。",
         "none": "— 无 —"
       },
       "categories": {
