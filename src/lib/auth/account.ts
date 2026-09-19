@@ -16,7 +16,7 @@
 // receive a fully-loaded context from `requireRole`:
 //
 //   try {
-//     const ctx = await requireRole("admin");
+//     const ctx = await requireRole("owner");
 //     // ctx.supabase — the SSR client (RLS scoped to this user)
 //     // ctx.userId  — auth.uid()
 //     // ctx.accountId / ctx.role / ctx.account

@@ -49,7 +49,7 @@ export async function GET(request: Request) {
       .eq("user_id", user.id)
       .maybeSingle();
     const callerRole = callerProfile?.role ?? "agent";
-    const canSeeEmail = callerRole === "owner" || callerRole === "admin";
+    const canSeeEmail = callerRole === "owner";
 
     const includeVirtual =
       new URL(request.url).searchParams.get("includeVirtual") === "1";
@@ -103,10 +103,10 @@ export async function GET(request: Request) {
       id: row.id,
       user_id: row.user_id ?? row.id,
       full_name: row.full_name ?? "",
-      // Email is admin-only; agents see names only.
+      // Email is owner-only; everyone else sees names only.
       email: canSeeEmail ? row.email : null,
       avatar_url: row.avatar_url,
-      role: row.role === "owner" || row.role === "admin" || row.role === "agent"
+      role: row.role === "owner" || row.role === "operator" || row.role === "agent"
         ? row.role
         : "agent",
       joined_at: row.created_at,

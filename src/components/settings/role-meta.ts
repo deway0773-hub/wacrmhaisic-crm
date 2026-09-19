@@ -1,7 +1,6 @@
 import {
   Briefcase,
   Crown,
-  Shield,
   UserCog,
   type LucideIcon,
 } from 'lucide-react';
@@ -27,12 +26,6 @@ export const ROLE_META: Record<
     label: 'owner',
     variant: 'owner',
     className: 'border-amber-500/40 bg-amber-500/10 text-amber-300',
-  },
-  admin: {
-    icon: Shield,
-    label: 'admin',
-    variant: 'admin',
-    className: 'border-primary/40 bg-primary/10 text-primary',
   },
   operator: {
     icon: Briefcase,

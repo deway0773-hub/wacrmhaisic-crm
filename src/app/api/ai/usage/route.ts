@@ -30,7 +30,7 @@ interface UsageRow {
  */
 export async function GET(request: Request) {
   try {
-    const { supabase, accountId } = await requireRole('admin')
+    const { supabase, accountId } = await requireRole('owner')
 
     const url = new URL(request.url)
     const rawDays = Number(url.searchParams.get('days'))

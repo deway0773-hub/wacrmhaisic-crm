@@ -172,7 +172,7 @@ export async function POST(request: Request) {
     // (`whatsapp_config_insert/update` require is_account_member(...,
     // 'admin')), but checking here turns a confusing 500 into a clear
     // 403 and keeps the guard next to the code it protects.
-    const { supabase, accountId, userId } = await requireRole('admin')
+    const { supabase, accountId, userId } = await requireRole('owner')
 
     const body = await request.json()
     const { phone_number_id, waba_id, access_token, verify_token, pin } = body
@@ -436,7 +436,7 @@ export async function DELETE() {
     // POST — it takes the whole account offline. RLS enforces it too
     // (whatsapp_config_delete), but a route-level check gives a clean
     // 403 instead of a 500.
-    const { supabase, accountId } = await requireRole('admin')
+    const { supabase, accountId } = await requireRole('owner')
 
     const { error: deleteError } = await supabase
       .from('whatsapp_config')

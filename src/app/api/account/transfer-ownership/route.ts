@@ -2,7 +2,7 @@
 // POST /api/account/transfer-ownership
 //
 // Owner only. Atomically:
-//   - demotes the current owner to 'admin'
+//   - demotes the current owner to 'operator'
 //   - promotes the target member to 'owner'
 //   - updates accounts.owner_user_id
 //
@@ -14,7 +14,7 @@
 //   The semantics differ: transfer demotes the current owner as
 //   a side-effect and changes the owner_user_id pointer on
 //   `accounts`. Making it explicit prevents the "I clicked the
-//   role dropdown by mistake" failure mode where an admin would
+//   role dropdown by mistake" failure mode where an owner would
 //   silently hand their account away.
 // ============================================================
 
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
   try {
     // `requireRole('owner')` is belt-and-braces — the RPC checks
     // this too, but failing fast here saves a Supabase round trip
-    // on the obvious "admin trying to transfer" case.
+    // on the obvious "non-owner trying to transfer" case.
     const ctx = await requireRole("owner");
 
     // Rate-limit owner-only transfers. Legitimate use is one click

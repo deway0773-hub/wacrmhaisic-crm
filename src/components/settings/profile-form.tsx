@@ -213,8 +213,6 @@ export function ProfileForm() {
     switch (profile?.role) {
       case 'owner':
         return t('roleOwner');
-      case 'admin':
-        return t('roleAdmin');
       case 'operator':
         return t('roleOperator');
       case 'agent':

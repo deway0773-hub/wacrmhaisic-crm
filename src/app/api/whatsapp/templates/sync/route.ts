@@ -128,7 +128,7 @@ export async function POST() {
     // settings-class data: `canEditSettings` and the message_templates
     // insert/update RLS policies (migration 017) both require 'admin'.
     // Resolving account_id off the profile only proved membership.
-    const { supabase, accountId, userId } = await requireRole('admin')
+    const { supabase, accountId, userId } = await requireRole('owner')
 
     const { data: config, error: configError } = await supabase
       .from('whatsapp_config')

@@ -3,11 +3,16 @@
 //
 // Mirrors the `account_role_enum` Postgres type from migration
 // 017_account_sharing.sql (extended by 041 and 046). The
-// hierarchy is intentionally a flat ordinal (owner=4 … agent=1)
+// hierarchy is intentionally a flat ordinal (owner=3 … agent=1)
 // — it matches the same CASE expression the
 // `is_account_member(account_id, min_role)` SQL helper uses, so
 // server-side TypeScript guards and database-side RLS speak the
 // same language.
+//
+// `admin` is a legacy role that is no longer assignable or shown
+// anywhere in the UI. It is deliberately absent from `AccountRole`
+// so no new code can reference it; the database enum still carries
+// the value for historical rows, and `isAccountRole` rejects it.
 //
 // Predicates (`canManageMembers`, `canEditSettings`, …) are the
 // single source of truth for "what can this role do?" — both
@@ -16,14 +21,19 @@
 // changes a one-file diff.
 // ============================================================
 
-export type AccountRole = "owner" | "admin" | "operator" | "agent";
+export type AccountRole = "owner" | "operator" | "agent";
 
 /** Ordered list of every valid role, lowest privilege first. */
 export const ACCOUNT_ROLES: readonly AccountRole[] = [
   "agent",
   "operator",
-  "admin",
   "owner",
+] as const;
+
+/** Every role that can be assigned to a member (owner is not). */
+export const CREATABLE_ROLES: readonly AccountRole[] = [
+  "operator",
+  "agent",
 ] as const;
 
 /**
@@ -33,8 +43,6 @@ export const ACCOUNT_ROLES: readonly AccountRole[] = [
 export function roleRank(role: AccountRole): number {
   switch (role) {
     case "owner":
-      return 4;
-    case "admin":
       return 3;
     case "operator":
       return 2;
@@ -67,18 +75,18 @@ export function isAccountRole(value: unknown): value is AccountRole {
 // = one new predicate here + one call site change per consumer.
 // ============================================================
 
-/** Owner / admin: invite, remove, change roles. */
+/** Owner: invite, remove, change roles. */
 export function canManageMembers(role: AccountRole): boolean {
-  return hasMinRole(role, "admin");
+  return hasMinRole(role, "owner");
 }
 
 /**
- * Owner / admin: edit account-wide settings (WhatsApp config,
+ * Owner: edit account-wide settings (WhatsApp config,
  * message templates, pipelines, tags, custom fields, account
  * name). Excludes per-user settings like avatar or own password.
  */
 export function canEditSettings(role: AccountRole): boolean {
-  return hasMinRole(role, "admin");
+  return hasMinRole(role, "owner");
 }
 
 /**

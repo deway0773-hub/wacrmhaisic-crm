@@ -17,7 +17,7 @@ let contactRow: Record<string, unknown> | null = null
 // The caller's role, as `requireRole` reads it off the profile. Sending
 // requires 'agent'; a role below that (or an unknown one) must be refused
 // before anything reaches Meta.
-let callerRole: string = 'admin'
+let callerRole: string = 'owner'
 // A conversation created during the request becomes retrievable by id —
 // the shared send core re-loads the conversation (with its contact) from
 // just the id, so the mock must model insert-then-select-by-id.
@@ -188,7 +188,7 @@ describe('POST /api/whatsapp/send — contact_id template path', () => {
     existingConversation = null
     createdConversation = null
     contactRow = CONTACT
-    callerRole = 'admin'
+    callerRole = 'owner'
     supabaseMock = makeSupabaseMock()
     sendTemplateMessage.mockClear()
   })
@@ -282,7 +282,7 @@ describe('POST /api/whatsapp/send — role enforcement', () => {
     }
     createdConversation = null
     contactRow = CONTACT
-    callerRole = 'admin'
+    callerRole = 'owner'
     supabaseMock = makeSupabaseMock()
     sendTemplateMessage.mockClear()
   })

@@ -61,7 +61,7 @@ export async function PATCH(
     // message_templates row — admin+ only. RLS on message_templates
     // already requires admin for writes, so an agent would otherwise
     // hit a confusing 500; gate it here for a clean 403.
-    const { supabase, accountId } = await requireRole('admin')
+    const { supabase, accountId } = await requireRole('owner')
 
     let payload: TemplatePayload
     try {
@@ -222,7 +222,7 @@ export async function DELETE(
 
     // Deleting removes the template on Meta and drops the shared
     // local row — admin+ only, same rationale as PATCH above.
-    const { supabase, accountId } = await requireRole('admin')
+    const { supabase, accountId } = await requireRole('owner')
 
     const { data: existing, error: lookupErr } = await supabase
       .from('message_templates')

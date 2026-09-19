@@ -15,7 +15,7 @@
 //
 // Role-gating
 //   The tab itself is reachable by any member, but mutation buttons
-//   are wrapped in `<RequireRole min="admin">` / `useCan` so an
+//   are wrapped in `<RequireRole min="owner">` / `useCan` so an
 //   agent sees the roster read-only. The server-side
 //   RPCs (set_member_role, remove_account_member) double-check
 //   the role anyway.
@@ -87,7 +87,6 @@ interface Member {
 
 // These roles are translated via `useTranslations("Settings.roles")` where they are used.
 const EDITABLE_ROLES: { value: AccountRole }[] = [
-  { value: 'admin' },
   { value: 'operator' },
   { value: 'agent' },
 ];
@@ -95,7 +94,7 @@ const EDITABLE_ROLES: { value: AccountRole }[] = [
 // Per-role chip metadata (icon / label / colour) lives in the shared
 // ROLE_META module so this roster and the Overview identity chip can't
 // drift. The colour scale runs amber (owner — scarce, immutable) →
-// primary (admin) → muted (agent).
+// sky (operator) → muted (agent).
 
 function fmtDate(iso: string): string {
   // Chinese long-form date, e.g. 2026年9月18日.

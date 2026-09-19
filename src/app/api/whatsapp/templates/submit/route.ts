@@ -94,7 +94,7 @@ export async function POST(request: Request) {
     // membership, so a lower role could push a template to Meta for
     // approval — an external side effect RLS can't roll back — before the
     // local upsert was refused.
-    const { supabase, accountId, userId } = await requireRole('admin')
+    const { supabase, accountId, userId } = await requireRole('owner')
 
     let payload: TemplatePayload
     try {

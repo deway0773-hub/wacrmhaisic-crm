@@ -118,13 +118,11 @@ interface AuthContextValue {
   defaultCurrency: string;
   /** True if `accountRole === 'owner'`. */
   isOwner: boolean;
-  /** True if `accountRole === 'admin'` (does NOT include owner — use canManageMembers for "admin or above"). */
-  isAdmin: boolean;
   /** True if `accountRole === 'agent'`. */
   isAgent: boolean;
-  /** True if the caller can manage members (admin+). */
+  /** True if the caller can manage members (owner only). */
   canManageMembers: boolean;
-  /** True if the caller can edit account-wide settings (admin+). */
+  /** True if the caller can edit account-wide settings (owner only). */
   canEditSettings: boolean;
   /** True if the caller can send messages and edit operational data (agent+). */
   canSendMessages: boolean;
@@ -402,7 +400,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       accountRole: role,
       accountId: profile?.account_id ?? null,
       isOwner: role === "owner",
-      isAdmin: role === "admin",
       isAgent: role === "agent",
       canManageMembers: role ? canManageMembersFor(role) : false,
       canEditSettings: role ? canEditSettingsFor(role) : false,
@@ -472,7 +469,6 @@ export function useAuth(): AuthContextValue {
       accountId: null,
       accountRole: null,
       isOwner: false,
-      isAdmin: false,
       isAgent: false,
       canManageMembers: false,
       canEditSettings: false,

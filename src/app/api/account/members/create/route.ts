@@ -23,10 +23,10 @@ function createServiceRoleClient() {
 
 export async function POST(req: Request) {
   try {
-    // Only admins may create members. This route uses the service
+    // Only the owner may create members. This route uses the service
     // role key (bypasses RLS), so the role check here is the real
     // gate — the UI hiding the button is not enough.
-    const ctx = await requireRole('admin')
+    const ctx = await requireRole('owner')
 
     const limit = checkRateLimit(
       `admin:memberCreate:${ctx.userId}`,
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     const isEmail = isEmailInput(rawAccount)
     const email = normalizeAccountToEmail(rawAccount)
     const password = body.password || ''
-    const role = body.role === '销售' ? 'agent' : body.role
+    const role = body.role === '销售' ? 'agent' : body.role === '运营' ? 'operator' : body.role
 
     if (!displayName) {
       return NextResponse.json({ error: '姓名不能为空' }, { status: 400 })
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
         { status: 400 },
       )
     }
-    if (role !== 'admin' && role !== 'agent') {
+    if (role !== 'operator' && role !== 'agent') {
       return NextResponse.json({ error: '无效的成员角色' }, { status: 400 })
     }
     if (password.length < 6) {

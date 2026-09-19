@@ -18,7 +18,6 @@ import {
   MessageSquare,
   Radio,
   Settings,
-  Shield,
   User,
   UserCog,
   Users,
@@ -44,17 +43,10 @@ const ROLE_CHIP: Record<
     className:
       "border-amber-500/40 bg-amber-500/10 text-amber-300",
   },
-  admin: {
-    icon: Shield,
-    labelKey: "roleAdmin",
-    // Primary-tinted: significant but not as scarce as owner.
-    className:
-      "border-primary/40 bg-primary/10 text-primary",
-  },
   operator: {
     icon: Briefcase,
     labelKey: "roleOperator",
-    // Sky-tinted: operational lead — distinct from admin and agent.
+    // Sky-tinted: operational lead — distinct from owner and agent.
     className:
       "border-sky-500/40 bg-sky-500/10 text-sky-300",
   },

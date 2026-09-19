@@ -27,7 +27,7 @@ export function CreateMemberDialog({ onCreated }: { onCreated?: () => void }) {
     if (form.password.length < 6) { toast.error('密码至少需要 6 位'); return }
     setLoading(true)
     try {
-      const roleMap: Record<string, string> = { '销售': 'agent', '管理': 'admin' }
+      const roleMap: Record<string, string> = { '销售': 'agent', '运营': 'operator' }
       const payload: Record<string, string> = {
         name: form.name,
         account,
@@ -88,7 +88,7 @@ export function CreateMemberDialog({ onCreated }: { onCreated?: () => void }) {
               <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="销售">销售</SelectItem>
-                <SelectItem value="管理">管理</SelectItem>
+                <SelectItem value="运营">运营</SelectItem>
               </SelectContent>
             </Select>
           </div>
