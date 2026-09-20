@@ -392,7 +392,7 @@ function EmptyState({
       </p>
       <GatedButton
         canAct={canCreate}
-        gateReason="create flows"
+        gateReason="创建流程"
         onClick={onCreate}
         className="mt-5"
       >

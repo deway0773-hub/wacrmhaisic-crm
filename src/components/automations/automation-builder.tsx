@@ -1165,7 +1165,7 @@ function StepRenderer({
                     variant="ghost"
                     size="icon"
                     disabled={index === total - 1}
-                    aria-label="Move down"
+                    aria-label="下移"
                     onClick={() => props.moveStepAt(path, 1)}
                   >
                     <ArrowDown className="h-4 w-4" />

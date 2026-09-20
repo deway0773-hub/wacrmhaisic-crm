@@ -402,7 +402,7 @@ export default function PipelinesPage() {
           </p>
           <GatedButton
             canAct={canEditSettings}
-            gateReason="create pipelines"
+            gateReason="创建管道"
             onClick={() => setNewPipelineOpen(true)}
             className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90"
           >

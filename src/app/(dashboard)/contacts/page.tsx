@@ -372,7 +372,7 @@ export default function ContactsPage() {
           </GatedButton>
           <GatedButton
             canAct={canEdit}
-            gateReason="add or import contacts"
+            gateReason="添加或导入联系人"
             onClick={openAddForm}
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
           >
@@ -517,7 +517,7 @@ export default function ContactsPage() {
               variant="destructive"
               size="sm"
               canAct={canEdit}
-              gateReason="delete contacts"
+              gateReason="删除联系人"
               onClick={() => setBulkDeleteOpen(true)}
             >
               <Trash2 className="size-4" />
@@ -573,7 +573,7 @@ export default function ContactsPage() {
                     {!hasActiveFilters && (
                       <GatedButton
                         canAct={canEdit}
-                        gateReason="add or import contacts"
+                        gateReason="添加或导入联系人"
                         variant="outline"
                         size="sm"
                         onClick={openAddForm}

@@ -207,7 +207,7 @@ export default function BroadcastsPage() {
           </p>
           <GatedButton
             canAct={canCreate}
-            gateReason="create broadcasts"
+            gateReason="创建广播"
             onClick={() => router.push('/broadcasts/new')}
             className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90"
           >

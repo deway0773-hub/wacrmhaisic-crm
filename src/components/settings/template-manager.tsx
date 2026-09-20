@@ -547,7 +547,7 @@ export function TemplateManager() {
                                 ? 'text-yellow-400'
                                 : 'text-red-400'
                           }`}
-                          title="Meta quality score"
+                          title="Meta 质量评分"
                         >
                           {template.quality_score}
                         </span>
@@ -775,7 +775,7 @@ export function TemplateManager() {
                 <div className="space-y-2 mt-2">
                   <Input
                     id="template-header-text"
-                    aria-label="Header text"
+                    aria-label="页眉文本"
                     placeholder={t.raw('headerTextPlaceholder')}
                     value={form.header_content}
                     onChange={(e) =>
