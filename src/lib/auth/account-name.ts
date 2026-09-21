@@ -42,3 +42,21 @@ export function normalizeAccountToEmail(raw: string | null | undefined): string 
 export function isEmailInput(raw: string | null | undefined): boolean {
   return (raw ?? "").includes("@");
 }
+
+/**
+ * Inverse of `normalizeAccountToEmail`, for display.
+ *
+ * The database stores account names as `<account>@local.fake`, but
+ * users should never see that synthetic domain. Strip it so the
+ * header, settings overview, and profile form all render the same
+ * short account name (`zhengjiabao`). Real emails are returned
+ * unchanged.
+ */
+export function toDisplayAccount(raw: string | null | undefined): string {
+  const trimmed = (raw ?? "").trim();
+  if (!trimmed) return "";
+  const suffix = `@${LOCAL_ACCOUNT_DOMAIN}`;
+  return trimmed.toLowerCase().endsWith(suffix)
+    ? trimmed.slice(0, -suffix.length)
+    : trimmed;
+}

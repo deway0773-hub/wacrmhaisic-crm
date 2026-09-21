@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import { normalizeAccountToEmail } from "@/lib/auth/account-name";
+import { normalizeAccountToEmail, toDisplayAccount } from "@/lib/auth/account-name";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -67,6 +67,25 @@ function LoginPageInner() {
       setError(error.message);
       setLoading(false);
       return;
+    }
+
+    // 登录成功后把账号名写进 localStorage，并清掉历史遗留的
+    // `@local.fake` 假邮箱，避免右上角/总览卡片回显旧数据。
+    try {
+      const accountName = toDisplayAccount(loginEmail);
+      const cached = window.localStorage.getItem('user');
+      const parsed = cached ? JSON.parse(cached) : {};
+      window.localStorage.setItem(
+        'user',
+        JSON.stringify({
+          ...parsed,
+          username: accountName,
+          account: accountName,
+          email: accountName,
+        }),
+      );
+    } catch {
+      // localStorage 不可用（隐私模式等）时静默跳过。
     }
 
     // Full-page navigation (not router.push) so the browser issues a

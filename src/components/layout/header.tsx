@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { toDisplayAccount } from "@/lib/auth/account-name";
 import { LogOut, Menu, Settings as SettingsIcon, User } from "lucide-react";
 import {
   Avatar,
@@ -51,9 +52,14 @@ export function Header({ onOpenSidebar }: HeaderProps) {
   const { profile, signOut } = useAuth();
   const titleKey = getPageTitleKey(pathname);
 
+  // Accounts are stored as `<account>@local.fake`; never show that
+  // synthetic domain in the UI. `toDisplayAccount` strips it so the
+  // header matches the profile form.
+  const accountName = toDisplayAccount(profile?.email);
+
   const initial =
     profile?.full_name?.charAt(0)?.toUpperCase() ??
-    profile?.email?.charAt(0)?.toUpperCase() ??
+    accountName.charAt(0)?.toUpperCase() ??
     "U";
 
   return (
@@ -106,7 +112,7 @@ export function Header({ onOpenSidebar }: HeaderProps) {
               {profile?.full_name ?? t("defaultUser")}
             </p>
             <p className="truncate text-xs text-muted-foreground">
-              {profile?.email ?? ""}
+              {accountName}
             </p>
           </div>
           <DropdownMenuSeparator className="bg-border" />

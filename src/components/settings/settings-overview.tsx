@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { toDisplayAccount } from '@/lib/auth/account-name';
 import { useTheme } from '@/hooks/use-theme';
 import { THEMES } from '@/lib/themes';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -140,8 +141,9 @@ export function SettingsOverview({
     };
   }, [user?.id, accountId, canManageMembers]);
 
-  const displayName = profile?.full_name || profile?.email || t('yourAccount');
-  const initial = (profile?.full_name || profile?.email || 'U').charAt(0).toUpperCase();
+  const accountName = toDisplayAccount(profile?.email);
+  const displayName = profile?.full_name || accountName || t('yourAccount');
+  const initial = (profile?.full_name || accountName || 'U').charAt(0).toUpperCase();
   const roleMeta = accountRole ? ROLE_META[accountRole] : null;
   const RoleIcon = roleMeta?.icon;
 
@@ -227,9 +229,10 @@ export function SettingsOverview({
           <div className="truncate text-base font-semibold text-foreground">
             {displayName}
           </div>
-          {profile?.email ? (
+          {accountName ? (
             <div className="truncate text-sm text-muted-foreground">
-              {profile.email}
+              {t('accountLabel')}
+              {accountName}
             </div>
           ) : null}
         </div>

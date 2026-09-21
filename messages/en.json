@@ -1340,6 +1340,7 @@
       "modeLight": "Light mode",
       "modeDark": "Dark mode",
       "yourAccount": "Your account",
+      "accountLabel": "Account ",
       "loading": "Loading…"
     },
     "members": {

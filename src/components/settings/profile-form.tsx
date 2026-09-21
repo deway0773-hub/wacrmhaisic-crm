@@ -6,7 +6,10 @@ import { Loader2, Upload, Trash2, CircleAlert } from 'lucide-react';
 
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
-import { normalizeAccountToEmail } from '@/lib/auth/account-name';
+import {
+  normalizeAccountToEmail,
+  toDisplayAccount,
+} from '@/lib/auth/account-name';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,15 +33,6 @@ const ALLOWED_MIME = new Set([
 // 账号名不再强制邮箱格式：只要求 3 个字符以上，允许字母/数字/._-
 // （与 `ACCOUNT_NAME_RE` 保持一致）。
 const ACCOUNT_RE = /^[a-zA-Z0-9._-]{3,32}$/;
-
-/** 把 `zhengjiabao@local.fake` 这类内部标识还原成用户看到的账号名。 */
-function toDisplayAccount(value: string | null | undefined): string {
-  const raw = (value ?? '').trim();
-  if (!raw) return '';
-  return raw.toLowerCase().endsWith('@local.fake')
-    ? raw.slice(0, -'@local.fake'.length)
-    : raw;
-}
 
 export function ProfileForm() {
   const t = useTranslations('Settings.profile');
@@ -168,6 +162,26 @@ export function ProfileForm() {
       setPreviewUrl(null);
       setRemoveAvatar(false);
       await refreshProfile();
+
+      // 同步一份到 localStorage，避免旧数据（含 `@local.fake` 假邮箱）
+      // 在刷新前被其他组件回显。`email` 与 `username` 保持一致。
+      try {
+        const cached = window.localStorage.getItem('user');
+        const parsed = cached ? JSON.parse(cached) : {};
+        window.localStorage.setItem(
+          'user',
+          JSON.stringify({
+            ...parsed,
+            id: user.id,
+            full_name: trimmedName,
+            username: trimmedAccount,
+            account: trimmedAccount,
+            email: trimmedAccount,
+          }),
+        );
+      } catch {
+        // localStorage 不可用（隐私模式等）时静默跳过。
+      }
 
       toast.success(t('profileSaved'));
     } catch (err) {
