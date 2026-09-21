@@ -634,7 +634,15 @@ function ConditionForm({
             }
           >
             <SelectTrigger className="bg-muted">
-              <SelectValue />
+              <SelectValue>
+                {(v: ConditionCfg["subject"]) =>
+                  v === "var"
+                    ? t("capturedVariable")
+                    : v === "tag"
+                      ? t("contactHasTag")
+                      : t("contactField")
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="var">{t("capturedVariable")}</SelectItem>
@@ -710,7 +718,17 @@ function ConditionForm({
             }
           >
             <SelectTrigger className="bg-muted">
-              <SelectValue />
+              <SelectValue>
+                {(v: ConditionCfg["operator"]) =>
+                  v === "present"
+                    ? t("isPresent")
+                    : v === "absent"
+                      ? t("isAbsent")
+                      : v === "equals"
+                        ? t("equals")
+                        : t("contains")
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="present">{t("isPresent")}</SelectItem>
@@ -789,7 +807,11 @@ function SetTagForm({
             }
           >
             <SelectTrigger className="bg-muted">
-              <SelectValue />
+              <SelectValue>
+                {(v: SetTagCfg["mode"]) =>
+                  v === "remove" ? t("removeTag") : t("addTag")
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="add">{t("addTag")}</SelectItem>
@@ -961,7 +983,15 @@ function SendMediaForm({
           }}
         >
           <SelectTrigger className="bg-muted">
-            <SelectValue />
+            <SelectValue>
+              {(v: NonNullable<SendMediaCfg["media_type"]>) =>
+                v === "image"
+                  ? t("imageLabel")
+                  : v === "video"
+                    ? t("videoLabel")
+                    : t("documentLabel")
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="image">{t("imageLabel")}</SelectItem>

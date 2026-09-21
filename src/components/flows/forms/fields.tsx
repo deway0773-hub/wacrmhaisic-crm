@@ -114,7 +114,13 @@ export function NodeKeySelect({
       onValueChange={(v) => onChange(v === "__none__" ? null : v)}
     >
       <SelectTrigger className={cn("bg-muted", className)}>
-        <SelectValue placeholder={placeholder ?? "—"} />
+        <SelectValue placeholder={placeholder ?? "—"}>
+          {(v: string) => {
+            if (v === "__none__") return t("none");
+            const node = nodes.find((n) => n.node_key === v);
+            return node ? nodeDisplayName(node) : v;
+          }}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="__none__">{t("none")}</SelectItem>

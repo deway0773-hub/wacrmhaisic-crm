@@ -294,7 +294,15 @@ function TriggerPanel({
             }
           >
             <SelectTrigger className="bg-muted">
-              <SelectValue />
+              <SelectValue>
+                {(value: BuilderState['trigger_type']) =>
+                  value === 'keyword'
+                    ? t('triggerKeywordTitle')
+                    : value === 'first_inbound_message'
+                      ? t('triggerFirstInboundTitle')
+                      : t('triggerManualTitle')
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="keyword">
@@ -413,7 +421,7 @@ function NodeCard({
     <div
       ref={cardRef}
       className={cn(
-        'bg-card relative overflow-hidden rounded-xl border transition-shadow duration-500',
+        'bg-card relative overflow-visible rounded-xl border transition-shadow duration-500',
         hasError
           ? 'border-red-500/40'
           : isEntry
