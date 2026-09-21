@@ -32,12 +32,14 @@ export function PasswordForm() {
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
   // 回填当前密码：优先 localStorage，其次默认值。
+  // 注意：值虽然被回填，但输入框默认 type=password，
+  // 所以页面加载时用户看到的是 `......`，点小眼睛才变明文。
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem('crm.currentPassword');
-      setCurrent(saved ?? '123456');
+      setCurrent(saved ?? '1233456');
     } catch {
-      setCurrent('123456');
+      setCurrent('1233456');
     }
   }, []);
 
