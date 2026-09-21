@@ -19,6 +19,10 @@
 // API route guards and UI gates should call them rather than
 // open-coding their own role checks. That keeps role-policy
 // changes a one-file diff.
+//
+// Policy note: `operator` (运营) is a super-admin equivalent for
+// everything except the irreversible account-level operations
+// (delete account, transfer ownership), which remain owner-only.
 // ============================================================
 
 export type AccountRole = "owner" | "operator" | "agent";
@@ -75,18 +79,25 @@ export function isAccountRole(value: unknown): value is AccountRole {
 // = one new predicate here + one call site change per consumer.
 // ============================================================
 
-/** Owner: invite, remove, change roles. */
+/**
+ * Owner / operator: invite, remove, change roles.
+ *
+ * 运营 (operator) is treated as a super-admin equivalent — they
+ * run the workspace day to day and need the same reach as the
+ * owner over teammates. Only the irreversible account-level
+ * operations (delete account, transfer ownership) stay owner-only.
+ */
 export function canManageMembers(role: AccountRole): boolean {
-  return hasMinRole(role, "owner");
+  return hasMinRole(role, "operator");
 }
 
 /**
- * Owner: edit account-wide settings (WhatsApp config,
+ * Owner / operator: edit account-wide settings (WhatsApp config,
  * message templates, pipelines, tags, custom fields, account
  * name). Excludes per-user settings like avatar or own password.
  */
 export function canEditSettings(role: AccountRole): boolean {
-  return hasMinRole(role, "owner");
+  return hasMinRole(role, "operator");
 }
 
 /**

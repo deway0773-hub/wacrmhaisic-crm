@@ -59,7 +59,7 @@ export async function GET() {
 }
 
 /**
- * POST /api/ai/config  (admin+)
+ * POST /api/ai/config  (operator+)
  *
  * Upsert the account's AI config. Validates the key with the provider
  * before persisting (mirrors the WhatsApp config verifying with Meta
@@ -69,7 +69,7 @@ export async function GET() {
  */
 export async function POST(request: Request) {
   try {
-    const { supabase, accountId, userId } = await requireRole('owner')
+    const { supabase, accountId, userId } = await requireRole('operator')
 
     const limit = checkRateLimit(`ai-config:${userId}`, RATE_LIMITS.adminAction)
     if (!limit.success) return rateLimitResponse(limit)
@@ -250,14 +250,14 @@ export async function POST(request: Request) {
 }
 
 /**
- * DELETE /api/ai/config  (admin+)
+ * DELETE /api/ai/config  (operator+)
  *
  * Removes the account's AI config (turns everything off and forgets the
  * key). Also used to recover from a corrupted encrypted key.
  */
 export async function DELETE() {
   try {
-    const { supabase, accountId } = await requireRole('owner')
+    const { supabase, accountId } = await requireRole('operator')
     const { error } = await supabase
       .from('ai_configs')
       .delete()

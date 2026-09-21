@@ -25,12 +25,12 @@ interface UsageRow {
  *
  * Token-spend summary for the account's BYO key over the last `days`
  * (1–90, default 30): totals, per-mode + per-model breakdowns, and a
- * zero-filled daily series for charting. Admin-only, mirroring the
+ * zero-filled daily series for charting. Operator-only, mirroring the
  * `ai_usage_log` SELECT policy — spend is billing-class.
  */
 export async function GET(request: Request) {
   try {
-    const { supabase, accountId } = await requireRole('owner')
+    const { supabase, accountId } = await requireRole('operator')
 
     const url = new URL(request.url)
     const rawDays = Number(url.searchParams.get('days'))

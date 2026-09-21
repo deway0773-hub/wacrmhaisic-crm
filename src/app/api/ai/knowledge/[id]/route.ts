@@ -36,12 +36,12 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 /**
- * PATCH /api/ai/knowledge/[id]  (admin+) — update title/content and
+ * PATCH /api/ai/knowledge/[id]  (operator+) — update title/content and
  * re-index when the content changed.
  */
 export async function PATCH(request: Request, { params }: Params) {
   try {
-    const { supabase, accountId, userId } = await requireRole('owner')
+    const { supabase, accountId, userId } = await requireRole('operator')
     const limit = checkRateLimit(`ai-kb:${userId}`, RATE_LIMITS.adminAction)
     if (!limit.success) return rateLimitResponse(limit)
 
@@ -110,11 +110,11 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 /**
- * DELETE /api/ai/knowledge/[id]  (admin+) — chunks cascade.
+ * DELETE /api/ai/knowledge/[id]  (operator+) — chunks cascade.
  */
 export async function DELETE(_request: Request, { params }: Params) {
   try {
-    const { supabase, accountId } = await requireRole('owner')
+    const { supabase, accountId } = await requireRole('operator')
     const { id } = await params
     const { error } = await supabase
       .from('ai_knowledge_documents')

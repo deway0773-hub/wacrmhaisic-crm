@@ -167,12 +167,12 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     // Connecting / reconfiguring the account's WhatsApp number is an
-    // admin-level action: it rotates the shared access token every
+    // operator-level action: it rotates the shared access token every
     // teammate sends through. RLS already enforces this
     // (`whatsapp_config_insert/update` require is_account_member(...,
-    // 'admin')), but checking here turns a confusing 500 into a clear
+    // 'operator')), but checking here turns a confusing 500 into a clear
     // 403 and keeps the guard next to the code it protects.
-    const { supabase, accountId, userId } = await requireRole('owner')
+    const { supabase, accountId, userId } = await requireRole('operator')
 
     const body = await request.json()
     const { phone_number_id, waba_id, access_token, verify_token, pin } = body
@@ -432,11 +432,11 @@ export async function POST(request: Request) {
  */
 export async function DELETE() {
   try {
-    // Disconnecting the number is admin-only for the same reason as
+    // Disconnecting the number is operator-only for the same reason as
     // POST — it takes the whole account offline. RLS enforces it too
     // (whatsapp_config_delete), but a route-level check gives a clean
     // 403 instead of a 500.
-    const { supabase, accountId } = await requireRole('owner')
+    const { supabase, accountId } = await requireRole('operator')
 
     const { error: deleteError } = await supabase
       .from('whatsapp_config')

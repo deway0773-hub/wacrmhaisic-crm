@@ -9,7 +9,7 @@
 // RLS client. Listing is open to any member (agent+) — the roster
 // is not secret; the secret (the key itself) is never in it. Minting
 // is admin+ (a key hands out capabilities), enforced by both
-// `requireRole('owner')` here and the `api_keys_insert` RLS policy.
+// `requireRole('operator')` here and the `api_keys_insert` RLS policy.
 //
 // IMPORTANT: the plaintext key is returned exactly ONCE, in the POST
 // response. We persist only its SHA-256 hash, so neither GET nor any
@@ -70,7 +70,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const ctx = await requireRole('owner');
+    const ctx = await requireRole('operator');
 
     const limit = checkRateLimit(
       `admin:apiKeyCreate:${ctx.userId}`,

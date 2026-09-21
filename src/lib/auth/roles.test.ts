@@ -92,15 +92,15 @@ describe("CREATABLE_ROLES", () => {
 });
 
 describe("capability predicates", () => {
-  it("canManageMembers: owner only", () => {
+  it("canManageMembers: owner + operator", () => {
     expect(canManageMembers("owner")).toBe(true);
-    expect(canManageMembers("operator")).toBe(false);
+    expect(canManageMembers("operator")).toBe(true);
     expect(canManageMembers("agent")).toBe(false);
   });
 
-  it("canEditSettings: owner only", () => {
+  it("canEditSettings: owner + operator", () => {
     expect(canEditSettings("owner")).toBe(true);
-    expect(canEditSettings("operator")).toBe(false);
+    expect(canEditSettings("operator")).toBe(true);
     expect(canEditSettings("agent")).toBe(false);
   });
 

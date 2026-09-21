@@ -2,18 +2,18 @@
 // /api/account/members/[userId]
 //
 //   PATCH  — change a member's role and/or daily assignment cap.
-//            Admin+.
-//   DELETE — remove a member.          Admin+.
+//            Operator+.
+//   DELETE — remove a member.          Operator+.
 //
 // Role changes delegate to SECURITY DEFINER RPCs from migration
-// 018:
+// 018 (re-created by 047 to accept operator+):
 //   - set_member_role(p_user_id, p_new_role)
 //   - remove_account_member(p_user_id)
 //
 // The RPCs do the *real* authorisation work — caller must be
-// admin+, target must be in caller's account, target can't be the
-// owner, can't be self. The TS layer here only forwards the call
-// and maps Postgres SQLSTATEs back to HTTP statuses.
+// operator+, target must be in caller's account, target can't be
+// the owner, can't be self. The TS layer here only forwards the
+// call and maps Postgres SQLSTATEs back to HTTP statuses.
 //
 // The daily cap (`daily_conversation_limit`, migration 043) is a
 // plain column write — it carries no privilege escalation, so it
@@ -34,7 +34,7 @@ export async function PATCH(
   { params }: { params: Promise<{ userId: string }> },
 ) {
   try {
-    const ctx = await requireRole("owner");
+    const ctx = await requireRole("operator");
 
     const limit = checkRateLimit(
       `admin:memberRole:${ctx.userId}`,
@@ -55,7 +55,7 @@ export async function PATCH(
       const role = body.role;
       if (!isAccountRole(role) || role === "owner") {
         return NextResponse.json(
-          { error: "'role' must be one of admin, operator, agent" },
+          { error: "'role' must be one of operator, agent" },
           { status: 400 },
         );
       }
@@ -114,7 +114,7 @@ export async function DELETE(
   { params }: { params: Promise<{ userId: string }> },
 ) {
   try {
-    const ctx = await requireRole("owner");
+    const ctx = await requireRole("operator");
 
     const limit = checkRateLimit(
       `admin:memberRemove:${ctx.userId}`,

@@ -36,14 +36,14 @@ export async function GET() {
 }
 
 /**
- * POST /api/ai/knowledge  (admin+)
+ * POST /api/ai/knowledge  (operator+)
  *
  * Create a document, then chunk + (optionally) embed it. If indexing
  * fails the document is still saved so the admin can retry via reindex.
  */
 export async function POST(request: Request) {
   try {
-    const { supabase, accountId, userId } = await requireRole('owner')
+    const { supabase, accountId, userId } = await requireRole('operator')
     const limit = checkRateLimit(`ai-kb:${userId}`, RATE_LIMITS.adminAction)
     if (!limit.success) return rateLimitResponse(limit)
 

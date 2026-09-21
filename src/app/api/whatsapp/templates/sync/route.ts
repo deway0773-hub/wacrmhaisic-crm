@@ -126,9 +126,9 @@ export async function POST() {
   try {
     // Syncing rewrites the account-wide template catalog, which is
     // settings-class data: `canEditSettings` and the message_templates
-    // insert/update RLS policies (migration 017) both require 'admin'.
+    // insert/update RLS policies (migration 017) both require 'operator'.
     // Resolving account_id off the profile only proved membership.
-    const { supabase, accountId, userId } = await requireRole('owner')
+    const { supabase, accountId, userId } = await requireRole('operator')
 
     const { data: config, error: configError } = await supabase
       .from('whatsapp_config')

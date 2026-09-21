@@ -90,11 +90,11 @@ export async function POST(request: Request) {
   try {
     // Message templates are settings-class data: `canEditSettings` and the
     // message_templates_insert/update RLS policies (migration 017) both
-    // require 'admin'. Resolving account_id off the profile only proved
+    // require 'operator'. Resolving account_id off the profile only proved
     // membership, so a lower role could push a template to Meta for
     // approval — an external side effect RLS can't roll back — before the
     // local upsert was refused.
-    const { supabase, accountId, userId } = await requireRole('owner')
+    const { supabase, accountId, userId } = await requireRole('operator')
 
     let payload: TemplatePayload
     try {

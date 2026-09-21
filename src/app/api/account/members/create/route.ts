@@ -23,10 +23,10 @@ function createServiceRoleClient() {
 
 export async function POST(req: Request) {
   try {
-    // Only the owner may create members. This route uses the service
+    // Only operator+ may create members. This route uses the service
     // role key (bypasses RLS), so the role check here is the real
     // gate — the UI hiding the button is not enough.
-    const ctx = await requireRole('owner')
+    const ctx = await requireRole('operator')
 
     const limit = checkRateLimit(
       `admin:memberCreate:${ctx.userId}`,
