@@ -10,6 +10,7 @@ import {
   normalizeAccountToEmail,
   toDisplayAccount,
 } from '@/lib/auth/account-name';
+import { useUserStore } from '@/store/user-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,6 +38,7 @@ const ACCOUNT_RE = /^[a-zA-Z0-9._-]{3,32}$/;
 export function ProfileForm() {
   const t = useTranslations('Settings.profile');
   const { user, profile, refreshProfile } = useAuth();
+  const setUser = useUserStore((state) => state.setUser);
   const supabase = createClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -163,25 +165,14 @@ export function ProfileForm() {
       setRemoveAvatar(false);
       await refreshProfile();
 
-      // 同步一份到 localStorage，避免旧数据（含 `@local.fake` 假邮箱）
-      // 在刷新前被其他组件回显。`email` 与 `username` 保持一致。
-      try {
-        const cached = window.localStorage.getItem('user');
-        const parsed = cached ? JSON.parse(cached) : {};
-        window.localStorage.setItem(
-          'user',
-          JSON.stringify({
-            ...parsed,
-            id: user.id,
-            full_name: trimmedName,
-            username: trimmedAccount,
-            account: trimmedAccount,
-            email: trimmedAccount,
-          }),
-        );
-      } catch {
-        // localStorage 不可用（隐私模式等）时静默跳过。
-      }
+      // 同步到全局 store：`setUser` 会同时写入 localStorage，
+      // 右上角头像菜单和设置总览卡片订阅了同一个 store，
+      // 因此会立即重渲染，无需 `window.location.reload()`。
+      setUser({
+        username: trimmedAccount,
+        displayName: trimmedName,
+        avatar: nextAvatarUrl,
+      });
 
       toast.success(t('profileSaved'));
     } catch (err) {

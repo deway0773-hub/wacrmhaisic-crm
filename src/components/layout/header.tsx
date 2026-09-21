@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { toDisplayAccount } from "@/lib/auth/account-name";
+import { hydrateUserStore, useUserStore } from "@/store/user-store";
 import { LogOut, Menu, Settings as SettingsIcon, User } from "lucide-react";
 import {
   Avatar,
@@ -52,13 +54,29 @@ export function Header({ onOpenSidebar }: HeaderProps) {
   const { profile, signOut } = useAuth();
   const titleKey = getPageTitleKey(pathname);
 
+  // Reactive display identity. Reading from the store (instead of
+  // parsing `localStorage` on every render) means a rename in
+  // Settings → Profile repaints the header immediately — no reload.
+  const storeUser = useUserStore((state) => state.user);
+
+  // Seed the store from `localStorage` on mount so a hard refresh
+  // paints the right name before Supabase resolves the profile.
+  useEffect(() => {
+    hydrateUserStore();
+  }, []);
+
   // Accounts are stored as `<account>@local.fake`; never show that
   // synthetic domain in the UI. `toDisplayAccount` strips it so the
-  // header matches the profile form.
-  const accountName = toDisplayAccount(profile?.email);
+  // header matches the profile form. The store wins once it has a
+  // value; the profile row is the fallback for a cold load.
+  const accountName =
+    storeUser.username || toDisplayAccount(profile?.email);
+  const displayName =
+    storeUser.displayName || profile?.full_name || t("defaultUser");
+  const avatarUrl = storeUser.avatar ?? profile?.avatar_url ?? null;
 
   const initial =
-    profile?.full_name?.charAt(0)?.toUpperCase() ??
+    displayName.charAt(0)?.toUpperCase() ??
     accountName.charAt(0)?.toUpperCase() ??
     "U";
 
@@ -88,18 +106,15 @@ export function Header({ onOpenSidebar }: HeaderProps) {
           aria-label={t("openAccountMenu")}
         >
           <Avatar className="size-8">
-            {profile?.avatar_url ? (
-              <AvatarImage
-                src={profile.avatar_url}
-                alt={profile.full_name ?? t("defaultAvatar")}
-              />
+            {avatarUrl ? (
+              <AvatarImage src={avatarUrl} alt={displayName} />
             ) : null}
             <AvatarFallback className="bg-primary/10 text-sm font-medium text-primary">
               {initial}
             </AvatarFallback>
           </Avatar>
           <span className="hidden text-sm font-medium text-foreground sm:inline">
-            {profile?.full_name ?? t("defaultUser")}
+            {displayName}
           </span>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -109,7 +124,7 @@ export function Header({ onOpenSidebar }: HeaderProps) {
         >
           <div className="px-2 py-1.5">
             <p className="truncate text-sm font-medium text-foreground">
-              {profile?.full_name ?? t("defaultUser")}
+              {displayName}
             </p>
             <p className="truncate text-xs text-muted-foreground">
               {accountName}

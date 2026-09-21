@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { toDisplayAccount } from '@/lib/auth/account-name';
+import { hydrateUserStore, useUserStore } from '@/store/user-store';
 import { useTheme } from '@/hooks/use-theme';
 import { THEMES } from '@/lib/themes';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -38,6 +39,9 @@ export function SettingsOverview({
 }) {
   const { user, profile, accountId, accountRole, canManageMembers } =
     useAuth();
+  // Reactive display identity — a rename in the profile form updates
+  // this card without a reload.
+  const storeUser = useUserStore((state) => state.user);
   const { mode, theme } = useTheme();
   const t = useTranslations('Settings.overview');
   const tRoles = useTranslations('Settings.roles');
@@ -51,6 +55,12 @@ export function SettingsOverview({
   // from blanking the rest of the landing.
   const [whatsapp, setWhatsapp] = useState<WhatsAppStatus | null>(null);
   const [whatsappLoading, setWhatsappLoading] = useState(true);
+
+  // Seed the store from `localStorage` on mount so a hard refresh
+  // paints the right name before Supabase resolves the profile.
+  useEffect(() => {
+    hydrateUserStore();
+  }, []);
 
   useEffect(() => {
     if (!user || !accountId) return;
@@ -141,9 +151,12 @@ export function SettingsOverview({
     };
   }, [user?.id, accountId, canManageMembers]);
 
-  const accountName = toDisplayAccount(profile?.email);
-  const displayName = profile?.full_name || accountName || t('yourAccount');
-  const initial = (profile?.full_name || accountName || 'U').charAt(0).toUpperCase();
+  const accountName =
+    storeUser.username || toDisplayAccount(profile?.email);
+  const displayName =
+    storeUser.displayName || profile?.full_name || accountName || t('yourAccount');
+  const initial = (displayName || 'U').charAt(0).toUpperCase();
+  const avatarUrl = storeUser.avatar ?? profile?.avatar_url ?? null;
   const roleMeta = accountRole ? ROLE_META[accountRole] : null;
   const RoleIcon = roleMeta?.icon;
 
@@ -218,8 +231,8 @@ export function SettingsOverview({
       {/* Identity */}
       <Card className="flex-row items-center gap-4 px-5 py-5">
         <Avatar size="lg" className="size-14">
-          {profile?.avatar_url ? (
-            <AvatarImage src={profile.avatar_url} alt={displayName} />
+          {avatarUrl ? (
+            <AvatarImage src={avatarUrl} alt={displayName} />
           ) : null}
           <AvatarFallback className="bg-primary/10 text-xl text-primary">
             {initial}
