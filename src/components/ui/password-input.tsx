@@ -89,7 +89,7 @@ export function PasswordInput({
         aria-label={shown ? "隐藏密码" : "显示密码"}
         title={shown ? "点击隐藏" : "点击显示"}
         className={cn(
-          "absolute right-3 top-1/2 -translate-y-1/2 border-0 bg-transparent p-0 text-gray-400 transition-opacity hover:text-gray-600",
+          "absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 border-none bg-transparent p-0 text-gray-400 transition-opacity hover:text-gray-600",
           shown ? "opacity-100" : "opacity-40",
           toggleClassName
         )}
