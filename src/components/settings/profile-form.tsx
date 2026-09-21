@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Loader2, Upload, Trash2, Mail, CircleAlert } from 'lucide-react';
+import { Loader2, Upload, Trash2, CircleAlert } from 'lucide-react';
 
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { normalizeAccountToEmail } from '@/lib/auth/account-name';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,10 +27,18 @@ const ALLOWED_MIME = new Set([
   'image/gif',
 ]);
 
-// Rough email shape check — the real validator is Supabase Auth, which
-// rejects anything malformed when we call updateUser({ email }). We
-// just want to stop obvious typos before making a network call.
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// 账号名不再强制邮箱格式：只要求 3 个字符以上，允许字母/数字/._-
+// （与 `ACCOUNT_NAME_RE` 保持一致）。
+const ACCOUNT_RE = /^[a-zA-Z0-9._-]{3,32}$/;
+
+/** 把 `zhengjiabao@local.fake` 这类内部标识还原成用户看到的账号名。 */
+function toDisplayAccount(value: string | null | undefined): string {
+  const raw = (value ?? '').trim();
+  if (!raw) return '';
+  return raw.toLowerCase().endsWith('@local.fake')
+    ? raw.slice(0, -'@local.fake'.length)
+    : raw;
+}
 
 export function ProfileForm() {
   const t = useTranslations('Settings.profile');
@@ -38,18 +47,17 @@ export function ProfileForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
+  const [account, setAccount] = useState('');
   const [pendingAvatar, setPendingAvatar] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [removeAvatar, setRemoveAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [emailChangePending, setEmailChangePending] = useState(false);
 
   // Seed form state once the profile loads.
   useEffect(() => {
     if (!profile) return;
     setFullName(profile.full_name ?? '');
-    setEmail(profile.email ?? '');
+    setAccount(toDisplayAccount(profile.email));
   }, [profile]);
 
   // Cleanup object URLs to avoid leaks.
@@ -65,7 +73,6 @@ export function ProfileForm() {
   const initial = (fullName || profile?.full_name || profile?.email || 'U')
     .charAt(0)
     .toUpperCase();
-
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = ''; // reset so the same file can be re-picked
@@ -106,9 +113,9 @@ export function ProfileForm() {
       toast.error(t('nameRequired'));
       return;
     }
-    const trimmedEmail = email.trim();
-    if (!EMAIL_RE.test(trimmedEmail)) {
-      toast.error(t('invalidEmail'));
+    const trimmedAccount = account.trim();
+    if (!ACCOUNT_RE.test(trimmedAccount)) {
+      toast.error(t('invalidAccount'));
       return;
     }
 
@@ -139,11 +146,17 @@ export function ProfileForm() {
         nextAvatarUrl = null;
       }
 
-      // Persist name + avatar to profiles.
+      // 账号名不强制邮箱格式：统一存成 `<account>@local.fake`，
+      // 与登录页的 `normalizeAccountToEmail` 保持同一套映射，
+      // 这样用户填 `zhengjiabao` 也能保存并用于登录。
+      const nextAccountEmail = normalizeAccountToEmail(trimmedAccount);
+
+      // Persist name + account + avatar to profiles.
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
           full_name: trimmedName,
+          email: nextAccountEmail,
           avatar_url: nextAvatarUrl,
         })
         .eq('user_id', user.id);
@@ -151,38 +164,12 @@ export function ProfileForm() {
         throw new Error(t('saveFailed', { message: updateError.message }));
       }
 
-      // Email change goes through Supabase Auth, which emails a
-      // confirmation to both the old and new addresses. We don't
-      // touch profiles.email — Supabase will push the change there
-      // after the user clicks the link (handled by the handle_new_user
-      // trigger pattern in production deployments).
-      let emailSent = false;
-      if (trimmedEmail.toLowerCase() !== profile.email.toLowerCase()) {
-        const { error: emailError } = await supabase.auth.updateUser({
-          email: trimmedEmail,
-        });
-        if (emailError) {
-          // Partial success: name/avatar saved but email didn't.
-          toast.success(t('profileSaved'));
-          toast.error(t('emailChangeFailed', { message: emailError.message }));
-          setSaving(false);
-          await refreshProfile();
-          return;
-        }
-        emailSent = true;
-      }
-
-      setEmailChangePending(emailSent);
       setPendingAvatar(null);
       setPreviewUrl(null);
       setRemoveAvatar(false);
       await refreshProfile();
 
-      toast.success(
-        emailSent
-          ? t('profileSavedEmailCheck')
-          : t('profileSaved'),
-      );
+      toast.success(t('profileSaved'));
     } catch (err) {
       const msg = err instanceof Error ? err.message : '未知错误';
       toast.error(msg);
@@ -194,7 +181,8 @@ export function ProfileForm() {
   const dirty =
     !!profile &&
     (fullName.trim() !== (profile.full_name ?? '') ||
-      email.trim().toLowerCase() !== (profile.email ?? '').toLowerCase() ||
+      account.trim().toLowerCase() !==
+        toDisplayAccount(profile.email).toLowerCase() ||
       pendingAvatar !== null ||
       removeAvatar);
 
@@ -295,31 +283,27 @@ export function ProfileForm() {
             />
           </div>
 
-          {/* Email */}
+          {/* Account */}
           <div className="space-y-2">
-            <Label htmlFor="profile-email" className="text-foreground">
-              {t('email')}
+            <Label htmlFor="profile-account" className="text-foreground">
+              {t('account')}
             </Label>
             <Input
-              id="profile-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="profile-account"
+              type="text"
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              value={account}
+              onChange={(e) => setAccount(e.target.value)}
+              placeholder={t('accountPlaceholder')}
+              maxLength={32}
               disabled={saving}
               required
             />
-            {emailChangePending && (
-              <p className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
-                <Mail className="mt-0.5 size-3.5 shrink-0" />
-                <span>
-                  {t.rich('emailChangeHint', { 
-                    oldEmail: profile?.email || '', 
-                    newEmail: email,
-                    bold: (chunks: React.ReactNode) => <strong>{chunks}</strong>
-                  })}
-                </span>
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              {t('accountHint')}
+            </p>
           </div>
 
           {/* Read-only block */}
