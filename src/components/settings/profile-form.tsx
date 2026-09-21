@@ -39,6 +39,7 @@ export function ProfileForm() {
   const t = useTranslations('Settings.profile');
   const { user, profile, refreshProfile } = useAuth();
   const setUser = useUserStore((state) => state.setUser);
+  const storeUser = useUserStore((state) => state.user);
   const supabase = createClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -168,8 +169,11 @@ export function ProfileForm() {
       // 同步到全局 store：`setUser` 会同时写入 localStorage，
       // 右上角头像菜单和设置总览卡片订阅了同一个 store，
       // 因此会立即重渲染，无需 `window.location.reload()`。
+      // `username` / `account` 都写纯账号名，绝不带 `@local.fake`。
       setUser({
+        ...storeUser,
         username: trimmedAccount,
+        account: trimmedAccount,
         displayName: trimmedName,
         avatar: nextAvatarUrl,
       });

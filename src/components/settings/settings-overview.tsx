@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { toDisplayAccount } from '@/lib/auth/account-name';
-import { hydrateUserStore, useUserStore } from '@/store/user-store';
+import { hydrateUserStore, stripFakeEmail, useUserStore } from '@/store/user-store';
 import { useTheme } from '@/hooks/use-theme';
 import { THEMES } from '@/lib/themes';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -151,8 +151,13 @@ export function SettingsOverview({
     };
   }, [user?.id, accountId, canManageMembers]);
 
+  // 账号名优先取全局 store（保存后立即重渲染），
+  // 冷启动时回退到 profile.email，并剥掉 `@local.fake` 假域名。
   const accountName =
-    storeUser.username || toDisplayAccount(profile?.email);
+    storeUser.username ||
+    storeUser.account ||
+    stripFakeEmail(profile?.email) ||
+    toDisplayAccount(profile?.email);
   const displayName =
     storeUser.displayName || profile?.full_name || accountName || t('yourAccount');
   const initial = (displayName || 'U').charAt(0).toUpperCase();

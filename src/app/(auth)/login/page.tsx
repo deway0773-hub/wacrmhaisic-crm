@@ -74,9 +74,11 @@ function LoginPageInner() {
     // 登录成功后把账号名写进全局 store（同时落 localStorage），
     // 并清掉历史遗留的 `@local.fake` 假邮箱，避免右上角/总览卡片
     // 回显旧数据。
+    const loginAccount = toDisplayAccount(loginEmail);
     setUser({
-      username: toDisplayAccount(loginEmail),
-      displayName: toDisplayAccount(loginEmail),
+      username: loginAccount,
+      account: loginAccount,
+      displayName: loginAccount,
       avatar: null,
     });
 

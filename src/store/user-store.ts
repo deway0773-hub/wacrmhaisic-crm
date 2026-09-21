@@ -24,6 +24,11 @@ export const USER_STORAGE_KEY = 'user';
 export interface UserState {
   /** Bare account name, e.g. `zhengjiabao`. Never `@local.fake`. */
   username: string;
+  /**
+   * Alias of `username`, kept so callers can write
+   * `{ ...user, account: trimmed }` without losing the field.
+   */
+  account: string;
   /** Human-readable name shown next to the avatar. */
   displayName: string;
   /** Avatar URL, or `null` when the user has none. */
@@ -32,9 +37,28 @@ export interface UserState {
 
 export const EMPTY_USER: UserState = {
   username: '',
+  account: '',
   displayName: '',
   avatar: null,
 };
+
+/**
+ * Strip the synthetic `@local.fake` domain from a stored account.
+ *
+ * The database keeps account names as `<account>@local.fake`, but the
+ * UI must never show that domain. Anything that is not a `local.fake`
+ * address is returned untouched.
+ */
+export function stripFakeEmail(value: string | null | undefined): string {
+  if (!value) return '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  const at = trimmed.lastIndexOf('@');
+  if (at === -1) return trimmed;
+  const domain = trimmed.slice(at + 1).toLowerCase();
+  if (domain === 'local.fake') return trimmed.slice(0, at);
+  return trimmed;
+}
 
 interface UserStore {
   user: UserState;
@@ -71,12 +95,15 @@ function readPersistedUser(): UserState {
       return '';
     };
 
-    const username = pick('username', 'account', 'email');
+    // `email` may hold the legacy `<account>@local.fake` value, so it
+    // is cleaned before it can reach the UI.
+    const username = stripFakeEmail(pick('username', 'account', 'email'));
     const displayName = pick('displayName', 'full_name', 'name') || username;
     const avatarRaw = parsed.avatar ?? parsed.avatar_url;
 
     return {
       username,
+      account: username,
       displayName,
       avatar: typeof avatarRaw === 'string' && avatarRaw ? avatarRaw : null,
     };
@@ -96,13 +123,16 @@ function persistUser(user: UserState): void {
       parsed && typeof parsed === 'object'
         ? (parsed as Record<string, unknown>)
         : {};
+    // `username` / `account` / `email` all carry the bare account name
+    // so legacy readers never see the synthetic `@local.fake` domain.
+    const account = stripFakeEmail(user.username || user.account);
     window.localStorage.setItem(
       USER_STORAGE_KEY,
       JSON.stringify({
         ...base,
-        username: user.username,
-        account: user.username,
-        email: user.username,
+        username: account,
+        account,
+        email: account,
         displayName: user.displayName,
         full_name: user.displayName,
         avatar: user.avatar,
@@ -120,12 +150,18 @@ export const useUserStore = create<UserStore>((set, get) => ({
   user: EMPTY_USER,
 
   setUser: (user) => {
-    persistUser(user);
-    set({ user });
+    // Keep `username` and `account` in lockstep no matter which one the
+    // caller supplied, and never let `@local.fake` into the state.
+    const account = stripFakeEmail(user.username || user.account);
+    const next: UserState = { ...user, username: account, account };
+    persistUser(next);
+    set({ user: next });
   },
 
   patchUser: (patch) => {
-    const next = { ...get().user, ...patch };
+    const merged = { ...get().user, ...patch };
+    const account = stripFakeEmail(merged.username || merged.account);
+    const next: UserState = { ...merged, username: account, account };
     persistUser(next);
     set({ user: next });
   },
