@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Loader2, KeyRound } from 'lucide-react';
+import { Loader2, KeyRound, Eye, EyeOff } from 'lucide-react';
 
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -30,6 +30,9 @@ export function PasswordForm() {
   const [confirm, setConfirm] = useState('');
   const [saving, setSaving] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNext, setShowNext] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,15 +103,31 @@ export function PasswordForm() {
             <Label htmlFor="current-password" className="text-foreground">
               {t('currentPassword')}
             </Label>
-            <Input
-              id="current-password"
-              type="password"
-              value={current}
-              onChange={(e) => setCurrent(e.target.value)}
-              autoComplete="current-password"
-              disabled={saving}
-              required
-            />
+            <div className="relative">
+              <Input
+                id="current-password"
+                type={showCurrent ? 'text' : 'password'}
+                value={current}
+                onChange={(e) => setCurrent(e.target.value)}
+                autoComplete="current-password"
+                disabled={saving}
+                required
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrent((v) => !v)}
+                className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 z-10 -translate-y-1/2"
+                aria-label={showCurrent ? '隐藏密码' : '显示密码'}
+                tabIndex={-1}
+              >
+                {showCurrent ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -116,31 +135,63 @@ export function PasswordForm() {
               <Label htmlFor="new-password" className="text-foreground">
                 {t('newPassword')}
               </Label>
-              <Input
-                id="new-password"
-                type="password"
-                value={next}
-                onChange={(e) => setNext(e.target.value)}
-                autoComplete="new-password"
-                minLength={MIN_PASSWORD}
-                disabled={saving}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="new-password"
+                  type={showNext ? 'text' : 'password'}
+                  value={next}
+                  onChange={(e) => setNext(e.target.value)}
+                  autoComplete="new-password"
+                  minLength={MIN_PASSWORD}
+                  disabled={saving}
+                  required
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNext((v) => !v)}
+                  className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 z-10 -translate-y-1/2"
+                  aria-label={showNext ? '隐藏密码' : '显示密码'}
+                  tabIndex={-1}
+                >
+                  {showNext ? (
+                    <EyeOff className="size-4" />
+                  ) : (
+                    <Eye className="size-4" />
+                  )}
+                </button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm-password" className="text-foreground">
                 {t('confirmPassword')}
               </Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                autoComplete="new-password"
-                minLength={MIN_PASSWORD}
-                disabled={saving}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="confirm-password"
+                  type={showConfirm ? 'text' : 'password'}
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  autoComplete="new-password"
+                  minLength={MIN_PASSWORD}
+                  disabled={saving}
+                  required
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm((v) => !v)}
+                  className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 z-10 -translate-y-1/2"
+                  aria-label={showConfirm ? '隐藏密码' : '显示密码'}
+                  tabIndex={-1}
+                >
+                  {showConfirm ? (
+                    <EyeOff className="size-4" />
+                  ) : (
+                    <Eye className="size-4" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
