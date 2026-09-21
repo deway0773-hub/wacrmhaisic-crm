@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
-  Eye,
-  EyeOff,
   Copy,
   CheckCircle2,
   XCircle,
@@ -19,6 +17,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -645,31 +644,23 @@ export function WhatsAppConfig() {
 
             <div className="space-y-2">
               <Label className="text-muted-foreground">{t('accessToken')}</Label>
-              <div className="relative">
-                <Input
-                  type={showToken ? 'text' : 'password'}
-                  placeholder={t('accessTokenPlaceholder')}
-                  value={accessToken}
-                  onChange={(e) => {
-                    setAccessToken(e.target.value);
+              <PasswordInput
+                defaultVisible={showToken}
+                onVisibleChange={setShowToken}
+                placeholder={t('accessTokenPlaceholder')}
+                value={accessToken}
+                onChange={(e) => {
+                  setAccessToken(e.target.value);
+                  setTokenEdited(true);
+                }}
+                onFocus={() => {
+                  if (accessToken === MASKED_TOKEN) {
+                    setAccessToken('');
                     setTokenEdited(true);
-                  }}
-                  onFocus={() => {
-                    if (accessToken === MASKED_TOKEN) {
-                      setAccessToken('');
-                      setTokenEdited(true);
-                    }
-                  }}
-                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowToken(!showToken)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showToken ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
-              </div>
+                  }
+                }}
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
+              />
               {config && !tokenEdited && (
                 <p className="text-xs text-muted-foreground">
                   {t('tokenHidden')}

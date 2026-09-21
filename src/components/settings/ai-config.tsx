@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Loader2, Sparkles, CheckCircle2, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Sparkles, CheckCircle2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { canEditSettings } from '@/lib/auth/roles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -301,38 +302,26 @@ export function AiConfig() {
             <div className="space-y-2">
               <Label htmlFor="ai-key">{t('apiKey')}</Label>
               <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Input
-                    id="ai-key"
-                    type={showKey ? 'text' : 'password'}
-                    value={apiKey}
-                    onChange={(e) => {
-                      setApiKey(e.target.value);
+                <PasswordInput
+                  id="ai-key"
+                  defaultVisible={showKey}
+                  onVisibleChange={setShowKey}
+                  value={apiKey}
+                  onChange={(e) => {
+                    setApiKey(e.target.value);
+                    setKeyEdited(true);
+                  }}
+                  onFocus={() => {
+                    if (!keyEdited && hasStoredKey) {
+                      setApiKey('');
                       setKeyEdited(true);
-                    }}
-                    onFocus={() => {
-                      if (!keyEdited && hasStoredKey) {
-                        setApiKey('');
-                        setKeyEdited(true);
-                      }
-                    }}
-                    placeholder={KEY_PLACEHOLDER[provider]}
-                    disabled={disabled}
-                    autoComplete="off"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowKey((s) => !s)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    tabIndex={-1}
-                  >
-                    {showKey ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
+                    }
+                  }}
+                  placeholder={KEY_PLACEHOLDER[provider]}
+                  disabled={disabled}
+                  autoComplete="off"
+                  className="flex-1"
+                />
                 <Button
                   variant="outline"
                   onClick={handleTest}
@@ -355,9 +344,8 @@ export function AiConfig() {
                   {t('optionalSemanticSearch')}
                 </span>
               </Label>
-              <Input
+              <PasswordInput
                 id="ai-embeddings-key"
-                type="password"
                 value={embeddingsKey}
                 onChange={(e) => {
                   setEmbeddingsKey(e.target.value);

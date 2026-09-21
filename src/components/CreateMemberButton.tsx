@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
@@ -80,7 +81,7 @@ export function CreateMemberDialog({ onCreated }: { onCreated?: () => void }) {
           </div>
           <div className="space-y-2">
             <Label>密码 *</Label>
-            <Input className="h-11 rounded-xl" type="password" placeholder="至少 6 位" autoComplete="new-password" value={form.password} onChange={e=>setForm({...form,password:e.target.value})}/>
+            <PasswordInput className="h-11 rounded-xl" placeholder="至少 6 位" autoComplete="new-password" value={form.password} onChange={e=>setForm({...form,password:e.target.value})}/>
           </div>
           <div className="space-y-2">
             <Label>角色</Label>

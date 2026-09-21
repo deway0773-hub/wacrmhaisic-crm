@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -138,11 +139,11 @@ function SignupPageInner() {
             </div>
             <div className="flex flex-col gap-2">
               <Label>密码</Label>
-              <Input type="password" placeholder="至少6位字符" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <PasswordInput placeholder="至少6位字符" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
             <div className="flex flex-col gap-2">
               <Label>确认密码</Label>
-              <Input type="password" placeholder="请再次输入密码" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+              <PasswordInput placeholder="请再次输入密码" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
             </div>
             <Button type="submit" disabled={loading} className="mt-2 h-10 w-full">
               {loading ? "正在创建..." : "创建账号"}
