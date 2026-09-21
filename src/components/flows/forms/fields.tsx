@@ -113,7 +113,7 @@ export function NodeKeySelect({
       value={value ?? "__none__"}
       onValueChange={(v) => onChange(v === "__none__" ? null : v)}
     >
-      <SelectTrigger className={cn("bg-muted", className)}>
+      <SelectTrigger className={cn("bg-muted min-w-[180px]", className)}>
         <SelectValue placeholder={placeholder ?? "—"}>
           {(v: string) => {
             if (v === "__none__") return t("none");
@@ -122,12 +122,18 @@ export function NodeKeySelect({
           }}
         </SelectValue>
       </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="__none__">{t("none")}</SelectItem>
+      <SelectContent className="min-w-[220px] w-auto p-2">
+        <SelectItem value="__none__" className="whitespace-nowrap py-2.5">
+          {t("none")}
+        </SelectItem>
         {options.map((n) => {
           const Icon = NODE_META[n.node_type].icon;
           return (
-            <SelectItem key={n.node_key} value={n.node_key}>
+            <SelectItem
+              key={n.node_key}
+              value={n.node_key}
+              className="whitespace-nowrap py-2.5"
+            >
               <span className="inline-flex items-center gap-1.5">
                 <Icon
                   className={cn("h-3 w-3", NODE_META[n.node_type].color)}

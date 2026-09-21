@@ -304,14 +304,17 @@ function TriggerPanel({
                 }
               </SelectValue>
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="keyword">
+            <SelectContent className="min-w-[220px] w-auto p-2">
+              <SelectItem value="keyword" className="whitespace-nowrap py-2.5">
                 {t('triggerKeywordTitle')}
               </SelectItem>
-              <SelectItem value="first_inbound_message">
+              <SelectItem
+                value="first_inbound_message"
+                className="whitespace-nowrap py-2.5"
+              >
                 {t('triggerFirstInboundTitle')}
               </SelectItem>
-              <SelectItem value="manual">
+              <SelectItem value="manual" className="whitespace-nowrap py-2.5">
                 {t('triggerManualTitle')}
               </SelectItem>
             </SelectContent>
