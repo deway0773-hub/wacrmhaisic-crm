@@ -30,7 +30,8 @@ export function PasswordForm() {
   const [confirm, setConfirm] = useState('');
   const [saving, setSaving] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
-  const [showCurrent, setShowCurrent] = useState(false);
+  // 当前密码默认明文显示，方便用户核对；新密码/确认密码默认隐藏。
+  const [showCurrent, setShowCurrent] = useState(true);
   const [showNext, setShowNext] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -117,14 +118,14 @@ export function PasswordForm() {
               <button
                 type="button"
                 onClick={() => setShowCurrent((v) => !v)}
-                className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 z-10 -translate-y-1/2"
+                className="absolute right-3 top-1/2 z-10 -translate-y-1/2 border-0 bg-transparent p-0 text-gray-400 shadow-none transition-colors hover:text-gray-600 focus-visible:outline-none"
                 aria-label={showCurrent ? '隐藏密码' : '显示密码'}
                 tabIndex={-1}
               >
                 {showCurrent ? (
-                  <EyeOff className="size-4" />
+                  <EyeOff size={18} strokeWidth={1.5} />
                 ) : (
-                  <Eye className="size-4" />
+                  <Eye size={18} strokeWidth={1.5} />
                 )}
               </button>
             </div>
@@ -150,14 +151,14 @@ export function PasswordForm() {
                 <button
                   type="button"
                   onClick={() => setShowNext((v) => !v)}
-                  className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 z-10 -translate-y-1/2"
+                  className="absolute right-3 top-1/2 z-10 -translate-y-1/2 border-0 bg-transparent p-0 text-gray-400 shadow-none transition-colors hover:text-gray-600 focus-visible:outline-none"
                   aria-label={showNext ? '隐藏密码' : '显示密码'}
                   tabIndex={-1}
                 >
                   {showNext ? (
-                    <EyeOff className="size-4" />
+                    <EyeOff size={18} strokeWidth={1.5} />
                   ) : (
-                    <Eye className="size-4" />
+                    <Eye size={18} strokeWidth={1.5} />
                   )}
                 </button>
               </div>
@@ -181,14 +182,14 @@ export function PasswordForm() {
                 <button
                   type="button"
                   onClick={() => setShowConfirm((v) => !v)}
-                  className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 z-10 -translate-y-1/2"
+                  className="absolute right-3 top-1/2 z-10 -translate-y-1/2 border-0 bg-transparent p-0 text-gray-400 shadow-none transition-colors hover:text-gray-600 focus-visible:outline-none"
                   aria-label={showConfirm ? '隐藏密码' : '显示密码'}
                   tabIndex={-1}
                 >
                   {showConfirm ? (
-                    <EyeOff className="size-4" />
+                    <EyeOff size={18} strokeWidth={1.5} />
                   ) : (
-                    <Eye className="size-4" />
+                    <Eye size={18} strokeWidth={1.5} />
                   )}
                 </button>
               </div>
