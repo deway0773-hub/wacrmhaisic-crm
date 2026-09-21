@@ -90,6 +90,7 @@ import {
   NODE_META,
   NodeIconChip,
   groupNodeTypesByCategory,
+  isConventionalNodeKey,
   nodeColors,
   nodeDisplayName,
   summarizeNode,
@@ -226,9 +227,10 @@ function FlowNodeCard({ data, selected }: NodeProps) {
       </div>
       <div className="text-muted-foreground mt-2 truncate font-mono text-[11px]">
         {displayName}
-        {displayName !== node?.node_key && (
-          <span className="ml-1 opacity-60">({node?.node_key})</span>
-        )}
+        {displayName !== node?.node_key &&
+          !isConventionalNodeKey(node?.node_key ?? '') && (
+            <span className="ml-1 opacity-60">({node?.node_key})</span>
+          )}
       </div>
       {summary && (
         <div className="text-muted-foreground mt-1 line-clamp-2 text-xs leading-relaxed">
@@ -725,9 +727,10 @@ function NodeEditSheet({
             </SheetTitle>
             <SheetDescription className="text-muted-foreground mt-0.5 text-xs">
               {displayName}
-              {displayName !== node.node_key && (
-                <span className="ml-1 opacity-60">({node.node_key})</span>
-              )}
+              {displayName !== node.node_key &&
+                !isConventionalNodeKey(node.node_key) && (
+                  <span className="ml-1 opacity-60">({node.node_key})</span>
+                )}
             </SheetDescription>
           </div>
           <code className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px]">

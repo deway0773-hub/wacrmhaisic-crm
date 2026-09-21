@@ -14,6 +14,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { SettingsPanelHead } from "./settings-panel-head";
 import {
   InteractiveBuilder,
@@ -47,6 +57,7 @@ export function QuickRepliesManager() {
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState<DraftState | null>(null);
   const [saving, setSaving] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<QuickReply | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -112,7 +123,6 @@ export function QuickRepliesManager() {
 
   const remove = useCallback(
     async (id: string) => {
-      if (!window.confirm("删除此快捷回复？")) return;
       const res = await fetch(`/api/quick-replies/${id}`, { method: "DELETE" });
       if (!res.ok) {
         toast.error("无法删除快捷回复。");
@@ -171,7 +181,7 @@ export function QuickRepliesManager() {
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  onClick={() => remove(qr.id)}
+                  onClick={() => setPendingDelete(qr)}
                   className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -236,6 +246,33 @@ export function QuickRepliesManager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!pendingDelete}
+        onOpenChange={(o) => !o && setPendingDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除？</AlertDialogTitle>
+            <AlertDialogDescription>
+              此操作不可恢复。将永久删除快捷回复“{pendingDelete?.title}”。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const target = pendingDelete;
+                setPendingDelete(null);
+                if (target) void remove(target.id);
+              }}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              确认删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

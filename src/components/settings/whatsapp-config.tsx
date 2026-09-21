@@ -23,6 +23,16 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { SettingsPanelHead } from './settings-panel-head';
 import {
   Accordion,
@@ -57,6 +67,7 @@ export function WhatsAppConfig() {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const [showToken, setShowToken] = useState(false);
   const [config, setConfig] = useState<WhatsAppConfigType | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('unknown');
@@ -378,10 +389,6 @@ export function WhatsAppConfig() {
   }
 
   async function handleReset() {
-    if (!confirm('这将删除当前 WhatsApp 配置，以便你重新输入。是否继续？')) {
-      return;
-    }
-
     try {
       setResetting(true);
       const res = await fetch('/api/whatsapp/config', { method: 'DELETE' });
@@ -453,7 +460,7 @@ export function WhatsAppConfig() {
                   {statusMessage}
                 </AlertDescription>
                 <Button
-                  onClick={handleReset}
+                  onClick={() => setConfirmReset(true)}
                   disabled={resetting}
                   size="sm"
                   className="mt-3 bg-amber-600 hover:bg-amber-700 text-white"
@@ -810,7 +817,7 @@ export function WhatsAppConfig() {
           {config && (
             <Button
               variant="outline"
-              onClick={handleReset}
+              onClick={() => setConfirmReset(true)}
               disabled={resetting}
               className="border-red-900 text-red-400 hover:text-red-300 hover:bg-red-950/40"
             >
@@ -925,6 +932,29 @@ export function WhatsAppConfig() {
         </Card>
       </div>
     </div>
+
+      <AlertDialog open={confirmReset} onOpenChange={setConfirmReset}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('resetConfig')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              这将删除当前 WhatsApp 配置，以便你重新输入。是否继续？
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmReset(false);
+                void handleReset();
+              }}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              确认重置
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }

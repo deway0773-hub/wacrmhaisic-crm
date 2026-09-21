@@ -12,6 +12,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
@@ -64,6 +74,7 @@ export function CustomFieldsPanel() {
   const [newName, setNewName] = useState('');
   const [creating, setCreating] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<CustomField | null>(null);
 
   const fetchFields = useCallback(async () => {
     if (!accountId) return;
@@ -151,13 +162,6 @@ export function CustomFieldsPanel() {
   }
 
   async function handleDelete(field: CustomField) {
-    if (
-      !window.confirm(
-        t('deleteConfirm', { name: field.field_name })
-      )
-    ) {
-      return;
-    }
     setBusyId(field.id);
     const { error } = await supabase
       .from('custom_fields')
@@ -221,12 +225,39 @@ export function CustomFieldsPanel() {
                 field={field}
                 busy={busyId === field.id}
                 onRename={handleRename}
-                onDelete={handleDelete}
+                onDelete={setPendingDelete}
               />
             ))}
           </ul>
         )}
       </div>
+
+      <AlertDialog
+        open={!!pendingDelete}
+        onOpenChange={(o) => !o && setPendingDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('deleteConfirm', { name: pendingDelete?.field_name ?? '' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const target = pendingDelete;
+                setPendingDelete(null);
+                if (target) void handleDelete(target);
+              }}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {t('deleteAction')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

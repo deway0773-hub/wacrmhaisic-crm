@@ -19,35 +19,35 @@ export const templateStatusConfig: Record<
   TemplateStatusDisplay
 > = {
   DRAFT: {
-    label: 'Draft',
+    label: '草稿',
     classes: 'bg-slate-600/20 text-muted-foreground border-slate-600/30',
   },
   PENDING: {
-    label: 'Pending',
+    label: '待审核',
     classes: 'bg-yellow-600/20 text-yellow-400 border-yellow-600/30',
   },
   APPROVED: {
-    label: 'Approved',
+    label: '已通过',
     classes: 'bg-primary/20 text-primary border-primary/30',
   },
   REJECTED: {
-    label: 'Rejected',
+    label: '已拒绝',
     classes: 'bg-red-600/20 text-red-400 border-red-600/30',
   },
   PAUSED: {
-    label: 'Paused',
+    label: '已暂停',
     classes: 'bg-orange-600/20 text-orange-400 border-orange-600/30',
   },
   DISABLED: {
-    label: 'Disabled',
+    label: '已禁用',
     classes: 'bg-red-900/30 text-red-500 border-red-900/40',
   },
   IN_APPEAL: {
-    label: 'In Appeal',
+    label: '申诉中',
     classes: 'bg-blue-600/20 text-blue-400 border-blue-600/30',
   },
   PENDING_DELETION: {
-    label: 'Pending Deletion',
+    label: '待删除',
     classes: 'bg-slate-700/30 text-muted-foreground border-slate-700/40',
   },
 };

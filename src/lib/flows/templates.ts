@@ -84,17 +84,17 @@ const WELCOME_MENU: FlowTemplate = {
     "向发送关键词的客户问好，并根据其是新客户还是老客户，将其转接给合适的客服。",
   icon: "MessageSquare",
   trigger_type: "keyword",
-  trigger_config: { keywords: ["support", "help", "hi"], match_type: "contains" },
+  trigger_config: { keywords: ["支持", "帮助", "你好"], match_type: "contains" },
   entry_node_id: "start",
   nodes: [
     {
       node_key: "start",
       node_type: "start",
       label: "开始",
-      config: { next_node_key: "welcome" },
+      config: { next_node_key: "欢迎语" },
     },
     {
-      node_key: "welcome",
+      node_key: "欢迎语",
       node_type: "send_buttons",
       label: "欢迎语",
       config: {
@@ -104,18 +104,18 @@ const WELCOME_MENU: FlowTemplate = {
           {
             reply_id: "existing",
             title: "老客户",
-            next_node_key: "existing_handoff",
+            next_node_key: "老客户转接",
           },
           {
             reply_id: "new",
             title: "新客户",
-            next_node_key: "new_handoff",
+            next_node_key: "新客户转接",
           },
         ],
       } as SendButtonsNodeConfig,
     },
     {
-      node_key: "existing_handoff",
+      node_key: "老客户转接",
       node_type: "handoff",
       label: "老客户转接",
       config: {
@@ -123,7 +123,7 @@ const WELCOME_MENU: FlowTemplate = {
       } as HandoffNodeConfig,
     },
     {
-      node_key: "new_handoff",
+      node_key: "新客户转接",
       node_type: "handoff",
       label: "新客户转接",
       config: {
@@ -144,7 +144,7 @@ const FAQ_BOT: FlowTemplate = {
   icon: "HelpCircle",
   trigger_type: "keyword",
   trigger_config: {
-    keywords: ["faq", "question", "info"],
+    keywords: ["常见问题", "咨询", "信息"],
     match_type: "contains",
   },
   entry_node_id: "start",
@@ -153,10 +153,10 @@ const FAQ_BOT: FlowTemplate = {
       node_key: "start",
       node_type: "start",
       label: "开始",
-      config: { next_node_key: "topics" },
+      config: { next_node_key: "选择主题" },
     },
     {
-      node_key: "topics",
+      node_key: "选择主题",
       node_type: "send_list",
       label: "选择主题",
       config: {
@@ -169,17 +169,17 @@ const FAQ_BOT: FlowTemplate = {
               {
                 reply_id: "hours",
                 title: "营业时间",
-                next_node_key: "answer_hours",
+                next_node_key: "回复营业时间",
               },
               {
                 reply_id: "pricing",
                 title: "价格咨询",
-                next_node_key: "answer_pricing",
+                next_node_key: "回复价格",
               },
               {
                 reply_id: "refunds",
                 title: "退款政策",
-                next_node_key: "answer_refunds",
+                next_node_key: "回复退款",
               },
             ],
           },
@@ -189,7 +189,7 @@ const FAQ_BOT: FlowTemplate = {
               {
                 reply_id: "human",
                 title: "转人工",
-                next_node_key: "human_handoff",
+                next_node_key: "转人工",
               },
             ],
           },
@@ -197,34 +197,34 @@ const FAQ_BOT: FlowTemplate = {
       } as SendListNodeConfig,
     },
     {
-      node_key: "answer_hours",
+      node_key: "回复营业时间",
       node_type: "send_message",
-      label: "回复-营业时间",
+      label: "回复营业时间",
       config: {
         text: "我们的营业时间是周一至周五 9:00–18:00（当地时间）。周末仅处理紧急问题。",
         next_node_key: "end",
       } as SendMessageNodeConfig,
     },
     {
-      node_key: "answer_pricing",
+      node_key: "回复价格",
       node_type: "send_message",
-      label: "回复-价格",
+      label: "回复价格",
       config: {
         text: "我们的价格每月 9 美元起。访问 https://example.com/pricing 查看完整价格说明。",
         next_node_key: "end",
       } as SendMessageNodeConfig,
     },
     {
-      node_key: "answer_refunds",
+      node_key: "回复退款",
       node_type: "send_message",
-      label: "回复-退款",
+      label: "回复退款",
       config: {
         text: "购买后 30 天内可申请退款。请回复你的订单号，我们会为你处理。",
         next_node_key: "end",
       } as SendMessageNodeConfig,
     },
     {
-      node_key: "human_handoff",
+      node_key: "转人工",
       node_type: "handoff",
       label: "转人工",
       config: {
@@ -257,49 +257,49 @@ const LEAD_CAPTURE: FlowTemplate = {
       node_key: "start",
       node_type: "start",
       label: "开始",
-      config: { next_node_key: "intro" },
+      config: { next_node_key: "欢迎语" },
     },
     {
-      node_key: "intro",
+      node_key: "欢迎语",
       node_type: "send_message",
       label: "欢迎语",
       config: {
         text: "欢迎！👋 我会问几个简单的问题，以便帮你找到合适的对接人。",
-        next_node_key: "ask_name",
+        next_node_key: "询问姓名",
       } as SendMessageNodeConfig,
     },
     {
-      node_key: "ask_name",
+      node_key: "询问姓名",
       node_type: "collect_input",
       label: "询问姓名",
       config: {
         prompt_text: "请问你的姓名是？",
         var_key: "name",
-        next_node_key: "ask_email",
+        next_node_key: "询问邮箱",
       } as CollectInputNodeConfig,
     },
     {
-      node_key: "ask_email",
+      node_key: "询问邮箱",
       node_type: "collect_input",
       label: "询问邮箱",
       config: {
         prompt_text: "谢谢 {{vars.name}}！请问你的工作邮箱是？",
         var_key: "email",
-        next_node_key: "ask_company",
+        next_node_key: "询问公司",
       } as CollectInputNodeConfig,
     },
     {
-      node_key: "ask_company",
+      node_key: "询问公司",
       node_type: "collect_input",
       label: "询问公司",
       config: {
         prompt_text: "快完成了——请问你的公司名称是？",
         var_key: "company",
-        next_node_key: "handoff",
+        next_node_key: "转交销售",
       } as CollectInputNodeConfig,
     },
     {
-      node_key: "handoff",
+      node_key: "转交销售",
       node_type: "handoff",
       label: "转交销售",
       config: {

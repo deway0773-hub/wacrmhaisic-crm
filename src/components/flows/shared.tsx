@@ -87,6 +87,19 @@ export function nodeDisplayName(node: {
   return node.label || fromConfig || node.node_key;
 }
 
+/**
+ * Conventional node keys that are part of the flow schema rather than
+ * user-authored identifiers. `start` / `end` are the entry and exit
+ * points every flow has, so surfacing their raw key next to the
+ * localized display name ("开始" / "结束") just leaks English into the
+ * UI. We hide the raw-key chip for these; user-renamed keys still show.
+ */
+const CONVENTIONAL_NODE_KEYS = new Set(['start', 'end']);
+
+export function isConventionalNodeKey(nodeKey: string): boolean {
+  return CONVENTIONAL_NODE_KEYS.has(nodeKey);
+}
+
 // ============================================================
 // Per-node-type metadata used to render icons + labels everywhere
 // the user sees a node summary.
@@ -106,9 +119,9 @@ export type NodeCategory = 'messaging' | 'logic' | 'flow';
 
 /** Category labels + the order they render in the add-step menu. */
 export const NODE_CATEGORIES: { id: NodeCategory; label: string }[] = [
-  { id: 'messaging', label: 'Messaging' },
-  { id: 'logic', label: 'Logic & data' },
-  { id: 'flow', label: 'Flow control' },
+  { id: 'messaging', label: '消息' },
+  { id: 'logic', label: '逻辑与数据' },
+  { id: 'flow', label: '流程控制' },
 ];
 
 export const NODE_META: Record<
@@ -122,73 +135,73 @@ export const NODE_META: Record<
   }
 > = {
   start: {
-    label: 'Start',
+    label: '开始',
     icon: PlayCircle,
     color: 'text-emerald-400',
-    blurb: 'Entry point of the flow',
+    blurb: '流程的入口点',
     category: 'flow',
   },
   send_message: {
-    label: 'Send message',
+    label: '发送消息',
     icon: MessageCircle,
     color: 'text-sky-400',
-    blurb: 'Sends a WhatsApp text message',
+    blurb: '发送 WhatsApp 文本消息',
     category: 'messaging',
   },
   send_buttons: {
-    label: 'Send buttons',
+    label: '发送按钮',
     icon: ListChecks,
     color: 'text-primary',
-    blurb: 'Sends quick-reply buttons',
+    blurb: '发送快捷回复按钮',
     category: 'messaging',
   },
   send_list: {
-    label: 'Send list',
+    label: '发送列表',
     icon: ListPlus,
     color: 'text-indigo-400',
-    blurb: 'Sends a tappable list of options',
+    blurb: '发送可点击的选项列表',
     category: 'messaging',
   },
   send_media: {
-    label: 'Send media',
+    label: '发送媒体',
     icon: Paperclip,
     color: 'text-cyan-400',
-    blurb: 'Sends an image, video, or document',
+    blurb: '发送图片、视频或文档',
     category: 'messaging',
   },
   collect_input: {
-    label: 'Collect input',
+    label: '收集输入',
     icon: Inbox,
     color: 'text-teal-400',
-    blurb: 'Asks a question, saves the reply',
+    blurb: '提问并保存客户的回复',
     category: 'logic',
   },
   condition: {
-    label: 'If / else',
+    label: '条件分支',
     icon: GitFork,
     color: 'text-fuchsia-400',
-    blurb: 'Branches on a rule',
+    blurb: '根据规则分支',
     category: 'logic',
   },
   set_tag: {
-    label: 'Tag contact',
+    label: '打标签',
     icon: Tag,
     color: 'text-pink-400',
-    blurb: 'Adds or removes a contact tag',
+    blurb: '添加或移除联系人标签',
     category: 'logic',
   },
   handoff: {
-    label: 'Handoff to agent',
+    label: '转人工',
     icon: UserPlus,
     color: 'text-amber-400',
-    blurb: 'Hands the conversation to a human',
+    blurb: '将对话转交给人工客服',
     category: 'flow',
   },
   end: {
-    label: 'End',
+    label: '结束',
     icon: Flag,
     color: 'text-muted-foreground',
-    blurb: 'Ends the flow',
+    blurb: '结束流程',
     category: 'flow',
   },
 };
@@ -307,12 +320,24 @@ export function NodeIconChip({
  * reply_id, etc.). Lowercases, collapses non-alphanumerics into
  * single underscores, and trims leading/trailing underscores. Falls
  * back to `fallback` for inputs that reduce to an empty string.
+ *
+ * CJK characters are preserved so a Chinese display name (e.g.
+ * "回复-营业时间") yields a readable Chinese key ("回复营业时间")
+ * instead of collapsing to the fallback. Separators BETWEEN two CJK
+ * characters are dropped rather than turned into underscores, so the
+ * key reads as clean Chinese ("回复营业时间") instead of the ugly
+ * "回复_营业时间" — the editor surfaces the raw key next to the
+ * display name, so it has to look presentable. Separators adjacent to
+ * ASCII still become underscores (e.g. "send message" → "send_message").
  */
 export function slugify(s: string, fallback: string): string {
   const cleaned = s
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9]+/g, '_')
+    // Drop separators that sit between two CJK characters.
+    .replace(/(?<=\p{Script=Han})[^\p{Script=Han}a-z0-9]+(?=\p{Script=Han})/gu, '')
+    // Collapse any remaining non-alphanumerics into single underscores.
+    .replace(/[^\p{Script=Han}a-z0-9]+/gu, '_')
     .replace(/^_+|_+$/g, '');
   return cleaned || fallback;
 }

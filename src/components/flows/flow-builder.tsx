@@ -52,6 +52,7 @@ import {
   NODE_META,
   NodeIconChip,
   groupNodeTypesByCategory,
+  isConventionalNodeKey,
   nodeColors,
   nodeDisplayName,
   slugify,
@@ -443,11 +444,12 @@ function NodeCard({
             <span className="text-foreground truncate text-xs font-medium">
               {nodeDisplayName(node)}
             </span>
-            {nodeDisplayName(node) !== node.node_key && (
-              <code className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[10px]">
-                {node.node_key}
-              </code>
-            )}
+            {nodeDisplayName(node) !== node.node_key &&
+              !isConventionalNodeKey(node.node_key) && (
+                <code className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[10px]">
+                  {node.node_key}
+                </code>
+              )}
             {isEntry && (
               <Badge
                 variant="outline"

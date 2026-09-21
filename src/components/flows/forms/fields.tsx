@@ -76,6 +76,7 @@ export function NextNodeRow({
   onChange: (v: string) => void;
   label: string;
 }) {
+  const t = useTranslations("Flows.builder.form");
   return (
     <div>
       <label className="mb-1 block text-xs text-muted-foreground">{label}</label>
@@ -84,7 +85,7 @@ export function NextNodeRow({
         nodes={allNodes}
         excludeKey={currentKey}
         onChange={(v) => onChange(v ?? "")}
-        placeholder={useTranslations("Flows.builder.form")("pickNextNode")}
+        placeholder={t("pickNextNode")}
       />
     </div>
   );

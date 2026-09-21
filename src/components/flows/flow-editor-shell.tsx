@@ -66,7 +66,8 @@ export function FlowEditorShell({ initialFlow, initialNodes }: Props) {
   // though this is a client component because the parent page only
   // mounts us AFTER a client-side fetch resolves — there's no SSR
   // pass for this subtree, so no hydration mismatch to worry about.
-  // Default to `canvas` (the new default) when nothing is saved.
+  // Default to `list` — the canvas view is temporarily disabled (see
+  // CANVAS_DISABLED below), so list is the only usable view.
   const [view, setView] = useState<View>(() => {
     try {
       const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -74,7 +75,7 @@ export function FlowEditorShell({ initialFlow, initialNodes }: Props) {
     } catch {
       // Private browsing / disabled storage — fall through to default.
     }
-    return "canvas";
+    return "list";
   });
 
   // Live mobile detection. We don't render canvas under the
@@ -82,7 +83,11 @@ export function FlowEditorShell({ initialFlow, initialNodes }: Props) {
   // intact so the user's preference comes back when they widen
   // again (e.g. rotating a tablet, resizing a window).
   const isMobile = useMatchMedia(MOBILE_BREAKPOINT);
-  const effectiveView: View = isMobile ? "list" : view;
+  // Canvas is temporarily disabled while its rendering issues are
+  // sorted out — force list view everywhere so users never land on a
+  // broken canvas. The toggle stays visible (disabled) so the feature
+  // is discoverable and the tooltip explains why.
+  const effectiveView = "list" as View;
 
   const choose = (next: View) => {
     setView(next);
@@ -114,6 +119,8 @@ export function FlowEditorShell({ initialFlow, initialNodes }: Props) {
                 onClick={() => choose("canvas")}
                 icon={<GitFork className="h-3.5 w-3.5" />}
                 label={t("canvasView")}
+                disabled
+                title={t("canvasDisabled")}
               />
               <SegButton
                 active={effectiveView === "list"}
@@ -186,22 +193,30 @@ function SegButton({
   onClick,
   icon,
   label,
+  disabled,
+  title,
 }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   label: string;
+  disabled?: boolean;
+  title?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
+      disabled={disabled}
+      title={title}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12.5px] font-medium transition-colors",
-        active
-          ? "bg-card text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground",
+        disabled
+          ? "text-muted-foreground/50 cursor-not-allowed"
+          : active
+            ? "bg-card text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground",
       )}
     >
       {icon}
