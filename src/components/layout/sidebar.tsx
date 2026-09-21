@@ -10,8 +10,6 @@ import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
 import {
   Bell,
   Bot,
-  Briefcase,
-  Crown,
   GitBranch,
   LayoutDashboard,
   LogOut,
@@ -19,45 +17,13 @@ import {
   Radio,
   Settings,
   User,
-  UserCog,
   Users,
   UsersRound,
   Workflow,
   X,
   Zap,
 } from "lucide-react";
-import type { AccountRole } from "@/lib/auth/roles";
-
-// Per-role chip metadata used in the sidebar's account strip + the
-// Members tab roster. Keeping this near both consumers in a single
-// place avoids drift between the two surfaces — when a designer
-// wants to recolour "agent" rows, this is the one diff.
-const ROLE_CHIP: Record<
-  AccountRole,
-  { icon: typeof Crown; labelKey: string; className: string }
-> = {
-  owner: {
-    icon: Crown,
-    labelKey: "roleOwner",
-    // Amber: scarce, immutable, "the boss" — gets visual emphasis.
-    className:
-      "border-amber-500/40 bg-amber-500/10 text-amber-300",
-  },
-  operator: {
-    icon: Briefcase,
-    labelKey: "roleOperator",
-    // Sky-tinted: operational lead — distinct from owner and agent.
-    className:
-      "border-sky-500/40 bg-sky-500/10 text-sky-300",
-  },
-  agent: {
-    icon: UserCog,
-    labelKey: "roleAgent",
-    // Neutral slate: the operational default.
-    className:
-      "border-border bg-muted text-foreground",
-  },
-};
+import { ROLE_META } from "@/components/settings/role-meta";
 import {
   Avatar,
   AvatarFallback,
@@ -308,15 +274,18 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
                 // invisible here, which made them indistinguishable
                 // from admins at a glance. Now everyone sees their
                 // role (with a colour cue) regardless of tier.
+                //
+                // 颜色/图标统一取自 `ROLE_META`，与设置页成员列表、
+                // 总览身份卡共用同一份定义，避免两处色值漂移。
                 (() => {
-                  const meta = ROLE_CHIP[accountRole];
+                  const meta = ROLE_META[accountRole];
                   const Icon = meta.icon;
                   return (
                     <span
                       className={`ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ${meta.className}`}
                     >
                       <Icon className="size-3" />
-                      {t(meta.labelKey as string)}
+                      {t(`role${accountRole.charAt(0).toUpperCase()}${accountRole.slice(1)}` as string)}
                     </span>
                   );
                 })()

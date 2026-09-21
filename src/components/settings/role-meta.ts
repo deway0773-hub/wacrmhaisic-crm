@@ -25,18 +25,24 @@ export const ROLE_META: Record<
     icon: Crown,
     label: 'owner',
     variant: 'owner',
-    className: 'border-amber-500/40 bg-amber-500/10 text-amber-300',
+    // 浅色主题下 `text-amber-300` 几乎看不见，必须补 `text-amber-700`；
+    // 深色主题再切回亮色。边框/底色同步加深，保证对比度 ≥ 4.5:1。
+    className:
+      'border-amber-500/50 bg-amber-500/15 text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300',
   },
   operator: {
     icon: Briefcase,
     label: 'operator',
     variant: 'operator',
-    className: 'border-sky-500/40 bg-sky-500/10 text-sky-300',
+    className:
+      'border-sky-500/50 bg-sky-500/15 text-sky-700 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-300',
   },
   agent: {
     icon: UserCog,
     label: 'agent',
     variant: 'muted',
-    className: 'border-border bg-muted text-muted-foreground',
+    // 中性角色用 `text-foreground` 而不是 `text-muted-foreground`，
+    // 否则灰底灰字在浅色主题下糊成一片。
+    className: 'border-border bg-muted text-foreground',
   },
 };

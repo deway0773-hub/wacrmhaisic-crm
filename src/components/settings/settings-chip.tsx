@@ -14,12 +14,13 @@ import { cn } from '@/lib/utils';
 export type ChipVariant = 'owner' | 'operator' | 'ok' | 'warn' | 'muted';
 
 const VARIANTS: Record<ChipVariant, string> = {
-  owner: 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-300',
+  owner:
+    'border-amber-500/50 bg-amber-500/15 text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300',
   operator:
-    'border-sky-500/40 bg-sky-500/10 text-sky-600 dark:text-sky-300',
-  ok: 'border-emerald-500/35 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
-  warn: 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-300',
-  muted: 'border-border bg-muted text-muted-foreground',
+    'border-sky-500/50 bg-sky-500/15 text-sky-700 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-300',
+  ok: 'border-emerald-500/45 bg-emerald-500/15 text-emerald-700 dark:border-emerald-500/35 dark:bg-emerald-500/10 dark:text-emerald-300',
+  warn: 'border-amber-500/50 bg-amber-500/15 text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300',
+  muted: 'border-border bg-muted text-foreground',
 };
 
 export function SettingsChip({
