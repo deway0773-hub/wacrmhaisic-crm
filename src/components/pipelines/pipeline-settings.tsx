@@ -105,6 +105,21 @@ export function PipelineSettings({
   }
 
   async function handleSave() {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      toast.error(t("toastNameRequired"));
+      return;
+    }
+
+    // Blank stage names violate the `name TEXT NOT NULL` constraint and
+    // would fail the whole batch upsert — reject them up front with a
+    // message that points at the offending row.
+    const blankStage = localStages.find((s) => !s.name.trim());
+    if (blankStage) {
+      toast.error(t("toastStageNameRequired"));
+      return;
+    }
+
     setSaving(true);
 
     // One upsert for all stages — batches N stage writes into a single
@@ -113,7 +128,7 @@ export function PipelineSettings({
     const stageRows = localStages.map((s, i) => ({
       id: s.id,
       pipeline_id: s.pipeline_id,
-      name: s.name,
+      name: s.name.trim(),
       color: s.color,
       position: i,
     }));
@@ -121,15 +136,22 @@ export function PipelineSettings({
     const [renameRes, stagesRes] = await Promise.all([
       supabase
         .from("pipelines")
-        .update({ name: name.trim() })
+        .update({ name: trimmedName })
         .eq("id", pipeline.id),
       supabase.from("pipeline_stages").upsert(stageRows, { onConflict: "id" }),
     ]);
 
     setSaving(false);
 
-    if (renameRes.error || stagesRes.error) {
-      toast.error(t("toastFailedSave"));
+    const failure = renameRes.error ?? stagesRes.error;
+    if (failure) {
+      // Surface the real Postgres/PostgREST message instead of a generic
+      // "failed" toast — RLS denials, constraint violations and network
+      // errors all look identical otherwise.
+      console.error("Failed to save pipeline:", failure);
+      toast.error(t("toastFailedSave"), {
+        description: failure.message,
+      });
       return;
     }
 
@@ -153,7 +175,10 @@ export function PipelineSettings({
       .select()
       .single();
     if (error || !data) {
-      toast.error(t("toastFailedAddStage"));
+      console.error("Failed to add stage:", error);
+      toast.error(t("toastFailedAddStage"), {
+        description: error?.message,
+      });
       return;
     }
     setLocalStages([...localStages, data as PipelineStage]);
@@ -176,7 +201,10 @@ export function PipelineSettings({
       .delete()
       .eq("id", stageId);
     if (error) {
-      toast.error(t("toastFailedDeleteStage"));
+      console.error("Failed to delete stage:", error);
+      toast.error(t("toastFailedDeleteStage"), {
+        description: error.message,
+      });
       return;
     }
     setLocalStages(localStages.filter((s) => s.id !== stageId));
@@ -191,7 +219,10 @@ export function PipelineSettings({
       .eq("id", pipeline.id);
     setDeleting(false);
     if (error) {
-      toast.error(t("toastFailedDeletePipeline"));
+      console.error("Failed to delete pipeline:", error);
+      toast.error(t("toastFailedDeletePipeline"), {
+        description: error.message,
+      });
       return;
     }
     onOpenChange(false);

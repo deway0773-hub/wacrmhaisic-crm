@@ -596,6 +596,8 @@
       "dragToReorder": "拖动以重新排序",
       "changeColor": "更改颜色",
       "toastFailedSave": "保存销售管道失败",
+      "toastNameRequired": "请填写销售管道名称",
+      "toastStageNameRequired": "每个阶段都需要填写名称",
       "toastSaved": "销售管道已保存",
       "toastFailedAddStage": "添加阶段失败",
       "toastMoveOrDeleteDeals": "请先移动或删除此阶段中的商机",

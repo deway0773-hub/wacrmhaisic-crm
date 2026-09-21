@@ -596,6 +596,8 @@
       "dragToReorder": "Drag to reorder",
       "changeColor": "Change color",
       "toastFailedSave": "Failed to save pipeline",
+      "toastNameRequired": "Pipeline name is required",
+      "toastStageNameRequired": "Every stage needs a name",
       "toastSaved": "Pipeline saved",
       "toastFailedAddStage": "Failed to add stage",
       "toastMoveOrDeleteDeals": "Move or delete deals in this stage first",

@@ -225,7 +225,10 @@ export default function PipelinesPage() {
         .update({ stage_id: newStageId })
         .eq("id", dealId);
       if (error) {
-        toast.error(t("toastFailedMoveDeal"));
+        console.error("Failed to move deal:", error);
+        toast.error(t("toastFailedMoveDeal"), {
+          description: error.message,
+        });
         refreshDeals();
       }
     },
@@ -274,7 +277,10 @@ export default function PipelinesPage() {
       .single();
 
     if (error || !pipeline) {
-      toast.error(t("toastFailedCreatePipeline"));
+      console.error("Failed to create pipeline:", error);
+      toast.error(t("toastFailedCreatePipeline"), {
+        description: error?.message,
+      });
       setCreating(false);
       return;
     }
@@ -285,7 +291,17 @@ export default function PipelinesPage() {
       color: s.color,
       position: s.position,
     }));
-    await supabase.from("pipeline_stages").insert(stagesPayload);
+    const { error: stagesError } = await supabase
+      .from("pipeline_stages")
+      .insert(stagesPayload);
+    if (stagesError) {
+      console.error("Failed to create default stages:", stagesError);
+      toast.error(t("toastFailedCreatePipeline"), {
+        description: stagesError.message,
+      });
+      setCreating(false);
+      return;
+    }
 
     setNewPipelineName("");
     setNewPipelineOpen(false);
