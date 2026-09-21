@@ -645,8 +645,8 @@ export function WhatsAppConfig() {
             <div className="space-y-2">
               <Label className="text-muted-foreground">{t('accessToken')}</Label>
               <PasswordInput
-                defaultVisible={showToken}
-                onVisibleChange={setShowToken}
+                defaultShow={showToken}
+                onShowChange={setShowToken}
                 placeholder={t('accessTokenPlaceholder')}
                 value={accessToken}
                 onChange={(e) => {

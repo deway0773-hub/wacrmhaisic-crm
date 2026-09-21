@@ -35,9 +35,9 @@ export function PasswordForm() {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem('crm.currentPassword');
-      setCurrent(saved ?? '1233456');
+      setCurrent(saved ?? '123456');
     } catch {
-      setCurrent('1233456');
+      setCurrent('123456');
     }
   }, []);
 
@@ -112,7 +112,6 @@ export function PasswordForm() {
             </Label>
             <PasswordInput
               id="current-password"
-              defaultVisible
               value={current}
               onChange={(e) => setCurrent(e.target.value)}
               autoComplete="current-password"

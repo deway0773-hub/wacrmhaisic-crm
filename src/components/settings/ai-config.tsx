@@ -304,8 +304,8 @@ export function AiConfig() {
               <div className="flex gap-2">
                 <PasswordInput
                   id="ai-key"
-                  defaultVisible={showKey}
-                  onVisibleChange={setShowKey}
+                  defaultShow={showKey}
+                  onShowChange={setShowKey}
                   value={apiKey}
                   onChange={(e) => {
                     setApiKey(e.target.value);

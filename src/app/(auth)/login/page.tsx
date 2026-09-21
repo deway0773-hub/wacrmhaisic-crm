@@ -143,7 +143,6 @@ function LoginPageInner() {
               </div>
               <PasswordInput
                 id="password"
-                defaultVisible
                 placeholder={t('passwordPlaceholder')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

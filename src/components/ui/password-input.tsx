@@ -39,11 +39,11 @@ function EyeIcon({ className }: { className?: string }) {
 
 export interface PasswordInputProps
   extends Omit<React.ComponentProps<"input">, "type"> {
-  /** 初始是否明文显示。默认 `false`（密文）。 */
-  defaultVisible?: boolean;
-  /** 受控的可见性（传入后需配合 `onVisibleChange`）。 */
-  visible?: boolean;
-  onVisibleChange?: (visible: boolean) => void;
+  /** 初始是否明文显示。默认 `false`（密文 `......`）。 */
+  defaultShow?: boolean;
+  /** 受控的可见性（传入后需配合 `onShowChange`）。 */
+  show?: boolean;
+  onShowChange?: (show: boolean) => void;
   /** 图标按钮的额外类名。 */
   toggleClassName?: string;
 }
@@ -51,27 +51,29 @@ export interface PasswordInputProps
 /**
  * 带“小眼睛”切换的密码输入框。
  *
- * - 图标固定为单个 `Eye`，切换时只改 `opacity-40` / `opacity-100`。
+ * - 默认隐藏（`type="password"`，显示为 `......`）。
+ * - 图标固定为单个 `Eye`，切换时只改 `opacity-40` / `opacity-100`，
+ *   不提供 `EyeOff` / eye-slash 变体。
  * - 输入框自动补 `pr-10`，避免文字被图标遮挡。
  * - 其余 props 透传给底层 `Input`。
  */
 export function PasswordInput({
   className,
-  defaultVisible = false,
-  visible,
-  onVisibleChange,
+  defaultShow = false,
+  show,
+  onShowChange,
   toggleClassName,
   ...props
 }: PasswordInputProps) {
-  const [internalVisible, setInternalVisible] = React.useState(defaultVisible);
-  const isControlled = visible !== undefined;
-  const shown = isControlled ? visible : internalVisible;
+  const [internalShow, setInternalShow] = React.useState(defaultShow);
+  const isControlled = show !== undefined;
+  const shown = isControlled ? show : internalShow;
 
   const toggle = React.useCallback(() => {
     const nextValue = !shown;
-    if (!isControlled) setInternalVisible(nextValue);
-    onVisibleChange?.(nextValue);
-  }, [isControlled, onVisibleChange, shown]);
+    if (!isControlled) setInternalShow(nextValue);
+    onShowChange?.(nextValue);
+  }, [isControlled, onShowChange, shown]);
 
   return (
     <div className="relative">
