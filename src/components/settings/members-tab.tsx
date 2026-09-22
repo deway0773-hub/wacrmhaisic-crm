@@ -42,7 +42,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -323,207 +322,186 @@ export function MembersTab() {
           );
         })()}
 
-      <Card>
-        <CardContent className="p-0">
-          <ul className="divide-y divide-border">
-            {members.map((member) => {
-              const roleMeta = ROLE_META[member.role];
-              const RoleIcon = roleMeta.icon;
-              const isSelf = member.user_id === user?.id;
-              const isOwnerRow = member.role === 'owner';
-              const isBusy = pendingMemberAction === member.id;
-              const presence = getPresence(member.user_id);
-              const presenceRow = getRow(member.user_id);
-              const presenceText = presenceLabel(
-                presence,
-                presenceRow?.last_seen_at ?? null,
-                now,
-              );
+      <ul className="flex flex-col gap-3">
+        {members.map((member) => {
+          const roleMeta = ROLE_META[member.role];
+          const RoleIcon = roleMeta.icon;
+          const isSelf = member.user_id === user?.id;
+          const isOwnerRow = member.role === 'owner';
+          const isBusy = pendingMemberAction === member.id;
+          const presence = getPresence(member.user_id);
+          const presenceRow = getRow(member.user_id);
+          const presenceText = presenceLabel(
+            presence,
+            presenceRow?.last_seen_at ?? null,
+            now,
+          );
 
-              return (
-                <li
-                  key={member.id}
-                  // Mobile: stack identity (avatar+name+email) above the
-                  // role/remove actions so the role dropdown's fixed
-                  // 128px width doesn't force the name into a 50-pixel
-                  // truncation. Desktop (sm+): everything inline as
-                  // before.
-                  className="flex flex-col gap-3 px-4 py-3"
-                >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                    <div className="flex min-w-0 flex-1 items-center gap-4">
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <Avatar className="size-9 shrink-0">
-                              {member.avatar_url ? (
-                                <AvatarImage
-                                  src={member.avatar_url}
-                                  alt={member.full_name || '成员'}
-                                />
-                              ) : null}
-                              <AvatarFallback className="bg-primary/10 text-sm font-medium text-primary">
-                                {(member.full_name || member.email || 'U')
-                                  .charAt(0)
-                                  .toUpperCase()}
-                              </AvatarFallback>
-                              {/* role+label so screen readers announce
-                                  presence — the hover tooltip alone isn't
-                                  reachable by keyboard/AT on a non-focusable
-                                  avatar. */}
-                              <AvatarBadge
-                                role="img"
-                                aria-label={presenceText}
-                                className={PRESENCE_DOT_CLASS[presence]}
-                              />
-                            </Avatar>
-                          }
+          return (
+            <li
+              key={member.id}
+              // Single-line card: identity on the left, controls on
+              // the right. Everything (daily cap, joined date, role
+              // chip, remove) sits on one row with a consistent
+              // gap-6 rhythm so nothing wraps to a second line.
+              className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-zinc-300 dark:hover:border-zinc-700"
+            >
+              {/* Left: avatar (with presence dot) + name + "you" tag. */}
+              <div className="flex min-w-0 items-center gap-3">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Avatar className="size-9 shrink-0">
+                        {member.avatar_url ? (
+                          <AvatarImage
+                            src={member.avatar_url}
+                            alt={member.full_name || '成员'}
+                          />
+                        ) : null}
+                        <AvatarFallback className="bg-primary/10 text-sm font-medium text-primary">
+                          {(member.full_name || member.email || 'U')
+                            .charAt(0)
+                            .toUpperCase()}
+                        </AvatarFallback>
+                        {/* role+label so screen readers announce
+                            presence — the hover tooltip alone isn't
+                            reachable by keyboard/AT on a non-focusable
+                            avatar. */}
+                        <AvatarBadge
+                          role="img"
+                          aria-label={presenceText}
+                          className={PRESENCE_DOT_CLASS[presence]}
                         />
-                        <TooltipContent>{presenceText}</TooltipContent>
-                      </Tooltip>
+                      </Avatar>
+                    }
+                  />
+                  <TooltipContent>{presenceText}</TooltipContent>
+                </Tooltip>
 
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="truncate text-sm font-medium text-foreground">
-                            {member.full_name || t('unnamed')}
-                          </span>
-                          {isSelf && (
-                            <Badge className="border-border bg-muted text-foreground text-[10px] uppercase tracking-wide">
-                              {t('you')}
-                            </Badge>
-                          )}
-                        </div>
-                        {member.email && (
-                          <p className="truncate text-xs text-muted-foreground">
-                            {member.email}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Joined date stays desktop-only. The mobile row's
-                        vertical density makes the joined date noise. */}
-                    <div className="hidden sm:block text-right text-xs text-muted-foreground">
-                      {t('joined', { date: fmtDate(member.joined_at) })}
-                    </div>
-
-                    {/* Actions cluster. On mobile this is its own row
-                        below the identity block; on desktop it sits
-                        inline. Items align to the start on mobile so the
-                        role dropdown lines up under the avatar. */}
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      {/* Role display / editor. Inline Select is admin+
-                          only AND not allowed on the owner row (owner
-                          changes go through transfer, which lands later). */}
-                      {canManageMembers && !isOwnerRow && !isSelf ? (
-                        <Select
-                          value={member.role}
-                          onValueChange={(v) =>
-                            // Base UI Select can emit null on clear. We
-                            // don't expose a clear affordance, so the
-                            // guard is defensive — but the typed
-                            // signature requires it.
-                            v && handleRoleChange(member, v as AccountRole)
-                          }
-                        >
-                          <SelectTrigger
-                            className="w-32 bg-muted border-border text-foreground"
-                            disabled={isBusy}
-                          >
-                            <SelectValue>{tRoles(member.role)}</SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {EDITABLE_ROLES.map((r) => (
-                              <SelectItem key={r.value} value={r.value}>
-                                {tRoles(r.value)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <span
-                          className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium ${roleMeta.className}`}
-                        >
-                          <RoleIcon className="size-3.5" />
-                          {tRoles(member.role)}
-                        </span>
-                      )}
-
-                      {/* Remove. Admin+ only; never on the owner row;
-                          never on yourself. Pre-polish styling was
-                          neutral-default + red-on-hover — the
-                          destructive intent was invisible until the
-                          user moused over. Now red is the default
-                          state with a darker shade on hover so the
-                          affordance reads at-a-glance. */}
-                      {canManageMembers && !isOwnerRow && !isSelf && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setRemovingMember(member)}
-                          disabled={isBusy}
-                          className="border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:border-red-500/60 hover:text-red-200"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Daily assignment cap — a compact inline control
-                      aligned to the right edge so it reads as a
-                      secondary setting rather than a full-width row.
-                      Admin+ only; never on the owner row (the owner
-                      isn't a round-robin target). Empty = unlimited. */}
-                  {canManageMembers && !isOwnerRow && (
-                    <div className="flex items-center justify-end gap-2 border-t border-border/60 pt-3">
-                      <label
-                        htmlFor={`limit-${member.id}`}
-                        className="text-xs text-muted-foreground"
-                      >
-                        {t('limitLabel')}
-                      </label>
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <input
-                              id={`limit-${member.id}`}
-                              type="number"
-                              min={0}
-                              step={1}
-                              inputMode="numeric"
-                              disabled={isBusy}
-                              defaultValue={
-                                member.daily_conversation_limit ?? ''
-                              }
-                              placeholder={t('limitUnlimited')}
-                              aria-label={t('limitLabel')}
-                              onBlur={(e) =>
-                                handleLimitChange(member, e.target.value)
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.currentTarget.blur();
-                                }
-                              }}
-                              className="h-8 w-20 rounded-md border border-border bg-muted px-2 text-center text-xs text-foreground tabular-nums placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
-                            />
-                          }
-                        />
-                        <TooltipContent>
-                          {t('limitHint', {
-                            count: member.assigned_today,
-                          })}
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="truncate text-sm font-medium text-foreground">
+                    {member.full_name || t('unnamed')}
+                  </span>
+                  {isSelf && (
+                    <Badge className="border-border bg-muted text-foreground text-[10px] uppercase tracking-wide">
+                      {t('you')}
+                    </Badge>
                   )}
-                </li>
-              );
-            })}
-          </ul>
-        </CardContent>
-      </Card>
+                </div>
+              </div>
+
+              {/* Right: daily cap + joined date + role + remove, all
+                  on one line with a gap-6 rhythm. */}
+              <div className="flex flex-wrap items-center gap-6">
+                {/* Daily assignment cap. Admin+ only; never on the
+                    owner row (the owner isn't a round-robin target).
+                    Empty = unlimited. */}
+                {canManageMembers && !isOwnerRow && (
+                  <div className="flex items-center gap-2">
+                    <label
+                      htmlFor={`limit-${member.id}`}
+                      className="text-xs text-zinc-500"
+                    >
+                      {t('limitLabel')}
+                    </label>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <input
+                            id={`limit-${member.id}`}
+                            type="number"
+                            min={0}
+                            step={1}
+                            inputMode="numeric"
+                            disabled={isBusy}
+                            defaultValue={
+                              member.daily_conversation_limit ?? ''
+                            }
+                            placeholder={t('limitUnlimited')}
+                            aria-label={t('limitLabel')}
+                            onBlur={(e) =>
+                              handleLimitChange(member, e.target.value)
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.currentTarget.blur();
+                              }
+                            }}
+                            className="h-8 w-16 rounded-md border border-border bg-muted px-2 text-center text-xs text-foreground tabular-nums placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+                          />
+                        }
+                      />
+                      <TooltipContent>
+                        {t('limitHint', {
+                          count: member.assigned_today,
+                        })}
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                )}
+
+                {/* Joined date — hidden below md to keep the row
+                    from wrapping on narrow screens. */}
+                <div className="hidden text-xs text-muted-foreground md:block">
+                  {t('joined', { date: fmtDate(member.joined_at) })}
+                </div>
+
+                {/* Role display / editor. Inline Select is admin+
+                    only AND not allowed on the owner row (owner
+                    changes go through transfer, which lands later). */}
+                {canManageMembers && !isOwnerRow && !isSelf ? (
+                  <Select
+                    value={member.role}
+                    onValueChange={(v) =>
+                      // Base UI Select can emit null on clear. We
+                      // don't expose a clear affordance, so the
+                      // guard is defensive — but the typed
+                      // signature requires it.
+                      v && handleRoleChange(member, v as AccountRole)
+                    }
+                  >
+                    <SelectTrigger
+                      className="w-32 bg-muted border-border text-foreground"
+                      disabled={isBusy}
+                    >
+                      <SelectValue>{tRoles(member.role)}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EDITABLE_ROLES.map((r) => (
+                        <SelectItem key={r.value} value={r.value}>
+                          {tRoles(r.value)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium ${roleMeta.className}`}
+                  >
+                    <RoleIcon className="size-3.5" />
+                    {tRoles(member.role)}
+                  </span>
+                )}
+
+                {/* Remove. Admin+ only; never on the owner row;
+                    never on yourself. Red is the default state so
+                    the destructive intent reads at-a-glance. */}
+                {canManageMembers && !isOwnerRow && !isSelf && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRemovingMember(member)}
+                    disabled={isBusy}
+                    className="border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:border-red-500/60 hover:text-red-200"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
 
       <CreateMemberDialog
         onCreated={loadEverything}
