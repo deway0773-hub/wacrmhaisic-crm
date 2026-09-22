@@ -470,13 +470,13 @@ export function MembersTab() {
                     </div>
                   </div>
 
-                  {/* Daily assignment cap — its own row so the numeric
-                      input never crowds the role dropdown / remove
-                      button. Admin+ only; never on the owner row (the
-                      owner isn't a round-robin target). Empty =
-                      unlimited. */}
+                  {/* Daily assignment cap — a compact inline control
+                      aligned to the right edge so it reads as a
+                      secondary setting rather than a full-width row.
+                      Admin+ only; never on the owner row (the owner
+                      isn't a round-robin target). Empty = unlimited. */}
                   {canManageMembers && !isOwnerRow && (
-                    <div className="flex items-center gap-2 border-t border-border/60 pt-3">
+                    <div className="flex items-center justify-end gap-2 border-t border-border/60 pt-3">
                       <label
                         htmlFor={`limit-${member.id}`}
                         className="text-xs text-muted-foreground"
@@ -506,7 +506,7 @@ export function MembersTab() {
                                   e.currentTarget.blur();
                                 }
                               }}
-                              className="h-8 w-20 rounded-md border border-border bg-muted px-2 text-xs text-foreground tabular-nums placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+                              className="h-8 w-20 rounded-md border border-border bg-muted px-2 text-center text-xs text-foreground tabular-nums placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
                             />
                           }
                         />
