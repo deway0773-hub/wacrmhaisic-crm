@@ -275,7 +275,7 @@ export function AiConfig() {
   const disabled = !canEdit || saving;
 
   return (
-    <div>
+    <form autoComplete="off" data-form-type="other" onSubmit={(e) => e.preventDefault()}>
       <SettingsPanelHead
         title={t('title')}
         description={t('description')}
@@ -333,10 +333,15 @@ export function AiConfig() {
                 <Label htmlFor="ai-model">{t('model')}</Label>
                 <Input
                   id="ai-model"
+                  name="wacrm-field-ai-model-4d2b"
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
                   placeholder={AI_PROVIDER_DEFAULT_MODEL[provider]}
                   disabled={disabled}
+                  autoComplete="off"
+                  data-1p-ignore="true"
+                  data-lpignore="true"
+                  data-form-type="other"
                 />
               </div>
             </div>
@@ -346,11 +351,15 @@ export function AiConfig() {
                 <Label htmlFor="ai-base-url">{t('baseUrl')}</Label>
                 <Input
                   id="ai-base-url"
+                  name="wacrm-field-ai-base-url-8c1f"
                   value={baseUrl}
                   onChange={(e) => setBaseUrl(e.target.value)}
                   placeholder={t('baseUrlPlaceholder')}
                   disabled={disabled}
                   autoComplete="off"
+                  data-1p-ignore="true"
+                  data-lpignore="true"
+                  data-form-type="other"
                 />
                 <p className="text-xs text-muted-foreground">
                   {t('baseUrlHint')}
@@ -365,6 +374,7 @@ export function AiConfig() {
               <div className="flex gap-2">
                 <PasswordInput
                   id="ai-key"
+                  name="wacrm-field-ai-key-6a7e"
                   defaultShow={showKey}
                   onShowChange={setShowKey}
                   value={apiKey}
@@ -381,8 +391,9 @@ export function AiConfig() {
                   placeholder={KEY_PLACEHOLDER[provider]}
                   disabled={disabled}
                   autoComplete="new-password"
-                  data-1p-ignore
+                  data-1p-ignore="true"
                   data-lpignore="true"
+                  data-form-type="other"
                   className="flex-1"
                 />
                 <Button
@@ -409,6 +420,7 @@ export function AiConfig() {
               </Label>
               <PasswordInput
                 id="ai-embeddings-key"
+                name="wacrm-field-ai-embeddings-key-1b5d"
                 value={embeddingsKey}
                 onChange={(e) => {
                   setEmbeddingsKey(e.target.value);
@@ -423,8 +435,9 @@ export function AiConfig() {
                 placeholder="sk-... (OpenAI)"
                 disabled={disabled}
                 autoComplete="new-password"
-                data-1p-ignore
+                data-1p-ignore="true"
                 data-lpignore="true"
+                data-form-type="other"
               />
               <p className="text-xs text-muted-foreground">
                 {t('embeddingsHint', {
@@ -575,6 +588,6 @@ export function AiConfig() {
           </Button>
         </div>
       </div>
-    </div>
+    </form>
   );
 }

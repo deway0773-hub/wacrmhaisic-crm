@@ -438,7 +438,12 @@ export function WhatsAppConfig() {
   const showResetBanner = resetReason === 'token_corrupted';
 
   return (
-    <section className="animate-in fade-in-50 duration-200">
+    <form
+      className="animate-in fade-in-50 duration-200"
+      autoComplete="off"
+      data-form-type="other"
+      onSubmit={(e) => e.preventDefault()}
+    >
       <SettingsPanelHead
         title={t("title")}
         description={t("description")}
@@ -625,9 +630,14 @@ export function WhatsAppConfig() {
             <div className="space-y-2">
               <Label className="text-muted-foreground">{t('phoneNumberId')}</Label>
               <Input
+                name="wacrm-field-phone-id-7f3a"
                 placeholder="e.g. 100234567890123"
                 value={phoneNumberId}
                 onChange={(e) => setPhoneNumberId(e.target.value)}
+                autoComplete="off"
+                data-1p-ignore="true"
+                data-lpignore="true"
+                data-form-type="other"
                 className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
@@ -635,9 +645,14 @@ export function WhatsAppConfig() {
             <div className="space-y-2">
               <Label className="text-muted-foreground">{t('wabaId')}</Label>
               <Input
+                name="wacrm-field-waba-id-2c9d"
                 placeholder="e.g. 100234567890456"
                 value={wabaId}
                 onChange={(e) => setWabaId(e.target.value)}
+                autoComplete="off"
+                data-1p-ignore="true"
+                data-lpignore="true"
+                data-form-type="other"
                 className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
@@ -645,6 +660,7 @@ export function WhatsAppConfig() {
             <div className="space-y-2">
               <Label className="text-muted-foreground">{t('accessToken')}</Label>
               <PasswordInput
+                name="wacrm-field-access-token-5b1e"
                 defaultShow={showToken}
                 onShowChange={setShowToken}
                 placeholder={t('accessTokenPlaceholder')}
@@ -659,6 +675,10 @@ export function WhatsAppConfig() {
                     setTokenEdited(true);
                   }
                 }}
+                autoComplete="new-password"
+                data-1p-ignore="true"
+                data-lpignore="true"
+                data-form-type="other"
                 className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
               />
               {config && !tokenEdited && (
@@ -671,9 +691,14 @@ export function WhatsAppConfig() {
             <div className="space-y-2">
               <Label className="text-muted-foreground">{t('webhookVerifyToken')}</Label>
               <Input
+                name="wacrm-field-webhook-verify-9a4f"
                 placeholder={t('webhookVerifyTokenPlaceholder')}
                 value={verifyToken}
                 onChange={(e) => setVerifyToken(e.target.value)}
+                autoComplete="off"
+                data-1p-ignore="true"
+                data-lpignore="true"
+                data-form-type="other"
                 className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
               />
               <p className="text-xs text-muted-foreground">
@@ -687,6 +712,7 @@ export function WhatsAppConfig() {
                 <span className="ml-1 text-muted-foreground">{t('optional')}</span>
               </Label>
               <Input
+                name="wacrm-field-pin-3e8c"
                 type="text"
                 inputMode="numeric"
                 maxLength={6}
@@ -695,6 +721,10 @@ export function WhatsAppConfig() {
                 onChange={(e) =>
                   setPin(e.target.value.replace(/\D/g, '').slice(0, 6))
                 }
+                autoComplete="off"
+                data-1p-ignore="true"
+                data-lpignore="true"
+                data-form-type="other"
                 className="bg-muted border-border text-foreground placeholder:text-muted-foreground tracking-widest"
               />
               <p className="text-xs text-muted-foreground leading-relaxed">
@@ -946,6 +976,6 @@ export function WhatsAppConfig() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </section>
+    </form>
   );
 }
