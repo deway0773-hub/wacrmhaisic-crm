@@ -6,7 +6,7 @@
 // whether the account is on OpenAI or Anthropic.
 // ============================================================
 
-export type AiProvider = 'openai' | 'anthropic'
+export type AiProvider = 'openai' | 'anthropic' | 'custom'
 
 /**
  * Account AI setup, decrypted and ready to use. Produced by
@@ -17,6 +17,9 @@ export interface AiConfig {
   provider: AiProvider
   model: string
   apiKey: string
+  /** Base URL for the `custom` (OpenAI-compatible) provider, e.g.
+   *  `https://api.deepseek.com/v1`. Null/ignored for openai/anthropic. */
+  baseUrl: string | null
   systemPrompt: string | null
   isActive: boolean
   autoReplyEnabled: boolean

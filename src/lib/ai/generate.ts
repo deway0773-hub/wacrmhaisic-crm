@@ -31,6 +31,7 @@ export async function generateReply(args: GenerateArgs): Promise<GenerateResult>
     systemPrompt,
     messages,
     timeoutMs,
+    baseUrl: config.baseUrl,
   }
 
   let result: { text: string; usage: AiUsage | null }
@@ -40,6 +41,11 @@ export async function generateReply(args: GenerateArgs): Promise<GenerateResult>
       break
     case 'anthropic':
       result = await generateAnthropic(providerArgs)
+      break
+    case 'custom':
+      // Any OpenAI-compatible endpoint (DeepSeek, Moonshot, …) — same
+      // wire format as OpenAI, just a different base URL.
+      result = await generateOpenAi(providerArgs)
       break
     default:
       throw new AiError(`Unsupported AI provider: ${config.provider}`, {

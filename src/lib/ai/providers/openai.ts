@@ -20,16 +20,29 @@ interface OpenAiResponse {
 }
 
 /**
+ * Resolve the Chat Completions endpoint for a call. Defaults to OpenAI;
+ * when `baseUrl` is set (the `custom` OpenAI-compatible provider, e.g.
+ * DeepSeek / Moonshot) we build `<baseUrl>/chat/completions`, tolerating
+ * a trailing slash and a base that already ends in `/v1`.
+ */
+export function resolveChatCompletionsUrl(baseUrl?: string | null): string {
+  const trimmed = baseUrl?.trim()
+  if (!trimmed) return OPENAI_URL
+  return `${trimmed.replace(/\/+$/, '')}/chat/completions`
+}
+
+/**
  * Call OpenAI's Chat Completions endpoint with the caller's own key.
  * Returns the raw assistant text + token usage (handoff parsing happens
- * in `generateReply`).
+ * in `generateReply`). `baseUrl` overrides the endpoint for the
+ * OpenAI-compatible `custom` provider.
  */
 export async function generateOpenAi(args: ProviderArgs): Promise<ProviderResult> {
-  const { apiKey, model, systemPrompt, messages, timeoutMs } = args
+  const { apiKey, model, systemPrompt, messages, timeoutMs, baseUrl } = args
 
   let res: Response
   try {
-    res = await fetch(OPENAI_URL, {
+    res = await fetch(resolveChatCompletionsUrl(baseUrl), {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,

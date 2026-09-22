@@ -10,6 +10,9 @@ export interface ProviderArgs {
   systemPrompt: string
   messages: ChatMessage[]
   timeoutMs: number
+  /** Override the API base URL (OpenAI-compatible `custom` provider).
+   *  Ignored by adapters that don't support it (Anthropic). */
+  baseUrl?: string | null
 }
 
 /**

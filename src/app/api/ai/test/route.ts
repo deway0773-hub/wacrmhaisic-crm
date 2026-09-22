@@ -27,15 +27,44 @@ export async function POST(request: Request) {
     }
 
     const provider = body.provider as AiProvider
-    if (provider !== 'openai' && provider !== 'anthropic') {
+    if (provider !== 'openai' && provider !== 'anthropic' && provider !== 'custom') {
       return NextResponse.json(
-        { error: 'provider must be "openai" or "anthropic"' },
+        { error: 'provider must be "openai", "anthropic" or "custom"' },
         { status: 400 },
       )
     }
     const model = typeof body.model === 'string' ? body.model.trim() : ''
     if (!model) {
       return NextResponse.json({ error: 'model is required' }, { status: 400 })
+    }
+
+    // The OpenAI-compatible `custom` provider needs a Base URL to reach
+    // (e.g. DeepSeek / Moonshot); the built-in providers ignore it.
+    const rawBaseUrl =
+      typeof body.base_url === 'string' ? body.base_url.trim() : ''
+    let baseUrl: string | null = null
+    if (provider === 'custom') {
+      if (!rawBaseUrl) {
+        return NextResponse.json(
+          { error: 'base_url is required for the custom provider' },
+          { status: 400 },
+        )
+      }
+      try {
+        const parsed = new URL(rawBaseUrl)
+        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+          return NextResponse.json(
+            { error: 'base_url must be an http(s) URL' },
+            { status: 400 },
+          )
+        }
+      } catch {
+        return NextResponse.json(
+          { error: 'base_url must be a valid URL' },
+          { status: 400 },
+        )
+      }
+      baseUrl = rawBaseUrl.replace(/\/+$/, '')
     }
 
     const rawKey = typeof body.api_key === 'string' ? body.api_key.trim() : ''
@@ -67,6 +96,7 @@ export async function POST(request: Request) {
         provider,
         model,
         apiKey: apiKeyPlain,
+        baseUrl,
         systemPrompt: null,
         isActive: true,
         autoReplyEnabled: false,

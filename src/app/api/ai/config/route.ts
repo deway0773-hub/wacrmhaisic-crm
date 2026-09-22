@@ -30,7 +30,7 @@ export async function GET() {
       // `api_key` is selected only to derive `has_key` — it is stripped
       // out below and never returned to the client.
       .select(
-        'provider, model, system_prompt, is_active, auto_reply_enabled, auto_reply_max_per_conversation, handoff_agent_id, api_key, embeddings_api_key',
+        'provider, model, base_url, system_prompt, is_active, auto_reply_enabled, auto_reply_max_per_conversation, handoff_agent_id, api_key, embeddings_api_key',
       )
       .eq('account_id', accountId)
       .maybeSingle()
@@ -78,11 +78,30 @@ export async function POST(request: Request) {
     if (!body || typeof body !== 'object') return bad('Invalid request body')
 
     const provider = body.provider as AiProvider
-    if (provider !== 'openai' && provider !== 'anthropic') {
-      return bad('provider must be "openai" or "anthropic"')
+    if (provider !== 'openai' && provider !== 'anthropic' && provider !== 'custom') {
+      return bad('provider must be "openai", "anthropic" or "custom"')
     }
     const model = typeof body.model === 'string' ? body.model.trim() : ''
     if (!model) return bad('model is required')
+
+    // Base URL is required for the OpenAI-compatible `custom` provider
+    // (e.g. DeepSeek / Moonshot) and ignored for the built-in ones.
+    const rawBaseUrl =
+      typeof body.base_url === 'string' ? body.base_url.trim() : ''
+    let baseUrl: string | null = null
+    if (provider === 'custom') {
+      if (!rawBaseUrl) return bad('base_url is required for the custom provider')
+      let parsed: URL
+      try {
+        parsed = new URL(rawBaseUrl)
+      } catch {
+        return bad('base_url must be a valid URL')
+      }
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+        return bad('base_url must be an http(s) URL')
+      }
+      baseUrl = rawBaseUrl.replace(/\/+$/, '')
+    }
 
     const systemPrompt =
       typeof body.system_prompt === 'string' && body.system_prompt.trim()
@@ -128,7 +147,7 @@ export async function POST(request: Request) {
     // Reuse the stored key when the form didn't send a fresh one.
     const { data: existing } = await supabase
       .from('ai_configs')
-      .select('id, provider, model, api_key')
+      .select('id, provider, model, base_url, api_key')
       .eq('account_id', accountId)
       .maybeSingle()
 
@@ -153,7 +172,8 @@ export async function POST(request: Request) {
       !existing ||
       rawKey !== '' ||
       provider !== existing.provider ||
-      model !== existing.model
+      model !== existing.model ||
+      baseUrl !== (existing.base_url ?? null)
 
     if (credentialsChanged) {
       try {
@@ -161,6 +181,7 @@ export async function POST(request: Request) {
           provider,
           model,
           apiKey: apiKeyPlain,
+          baseUrl,
           systemPrompt,
           isActive,
           autoReplyEnabled,
@@ -201,6 +222,7 @@ export async function POST(request: Request) {
     const shared: Record<string, unknown> = {
       provider,
       model,
+      base_url: baseUrl,
       system_prompt: systemPrompt,
       is_active: isActive,
       auto_reply_enabled: autoReplyEnabled,
