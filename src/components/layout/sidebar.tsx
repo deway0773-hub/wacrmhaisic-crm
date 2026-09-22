@@ -18,12 +18,11 @@ import {
   Settings,
   User,
   Users,
-  UsersRound,
   Workflow,
   X,
   Zap,
 } from "lucide-react";
-import { ROLE_META } from "@/components/settings/role-meta";
+import { stripFakeEmail } from "@/store/user-store";
 import {
   Avatar,
   AvatarFallback,
@@ -75,21 +74,20 @@ import { useTranslations } from "next-intl";
 export function Sidebar({ open = false, onClose }: SidebarProps) {
   const t = useTranslations("Sidebar");
   const pathname = usePathname();
-  const { profile, profileLoading, account, accountRole, signOut } = useAuth();
+  const { profile, signOut } = useAuth();
   const totalUnread = useTotalUnread();
   const unreadNotifications = useUnreadNotifications();
-  // Only surface the account-name strip when it actually carries
-  // information. A solo user's personal account is named after them
-  // (the 017 signup trigger seeds it from `full_name`), so showing it
-  // here would just duplicate the user name in the footer below. Once
-  // the account is renamed or the user joins a shared account, the
-  // name diverges and the strip becomes meaningful — that's the signal
-  // we gate on. Wait for the profile fetch to settle first, otherwise
-  // the strip flashes in once the row resolves (a layout jump).
-  const showAccountStrip =
-    !profileLoading &&
-    !!account?.name &&
-    account.name !== profile?.full_name;
+
+  // The footer shows exactly one identity: the signed-in user. The
+  // account name is deliberately NOT rendered here — for shared
+  // accounts it duplicated the user row (and surfaced a second
+  // email-shaped string), which read as "two logged-in users".
+  // Account context lives in Settings → Overview instead.
+  //
+  // `profile.email` may hold the synthetic `<account>@local.fake`
+  // identifier, so it is stripped before display. Real emails pass
+  // through untouched.
+  const displayEmail = stripFakeEmail(profile?.email);
 
   // Close the drawer when route changes — users opened it to navigate,
   // so once they pick a destination the drawer should get out of the way.
@@ -252,46 +250,8 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
           </ul>
         </nav>
 
-        {/* User section */}
+        {/* User section — a single row for the signed-in user. */}
         <div className="shrink-0 border-t border-border p-3">
-          {/* Account name display — surfaced only when the account
-              name differs from the user's own name (see
-              `showAccountStrip`). For a default solo account the two
-              match, so we hide it to avoid duplicating the user name
-              below; for renamed or shared accounts it tells the user
-              which account they're acting in. */}
-          {showAccountStrip && account?.name ? (
-            <div className="mb-2 flex items-center gap-2 px-3 text-xs text-muted-foreground">
-              <UsersRound className="size-3.5 shrink-0" />
-              {/* `title=` exposes the full name on hover when it
-                  gets truncated (long account names + narrow
-                  sidebars). Cheap a11y win. */}
-              <span className="truncate" title={account.name}>
-                {account.name}
-              </span>
-              {accountRole ? (
-                // Always render the chip — owners used to be
-                // invisible here, which made them indistinguishable
-                // from admins at a glance. Now everyone sees their
-                // role (with a colour cue) regardless of tier.
-                //
-                // 颜色/图标统一取自 `ROLE_META`，与设置页成员列表、
-                // 总览身份卡共用同一份定义，避免两处色值漂移。
-                (() => {
-                  const meta = ROLE_META[accountRole];
-                  const Icon = meta.icon;
-                  return (
-                    <span
-                      className={`ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ${meta.className}`}
-                    >
-                      <Icon className="size-3" />
-                      {t(`role${accountRole.charAt(0).toUpperCase()}${accountRole.slice(1)}` as string)}
-                    </span>
-                  );
-                })()
-              ) : null}
-            </div>
-          ) : null}
           <DropdownMenu>
             <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted/60 focus:bg-muted/60 focus:outline-none data-popup-open:bg-muted/60">
               <Avatar className="size-8 shrink-0">
@@ -311,8 +271,11 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
                 <p className="truncate text-sm font-medium text-foreground">
                   {profile?.full_name ?? t("defaultUser")}
                 </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {profile?.email ?? ""}
+                {/* No `truncate` here — the email is short once the
+                    synthetic domain is stripped, and truncating it
+                    produced the confusing `deway0773@gm...` display. */}
+                <p className="break-all text-xs text-muted-foreground">
+                  {displayEmail}
                 </p>
               </div>
             </DropdownMenuTrigger>
