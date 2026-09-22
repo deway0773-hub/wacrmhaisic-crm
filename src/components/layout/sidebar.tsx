@@ -22,7 +22,6 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { stripFakeEmail } from "@/store/user-store";
 import {
   Avatar,
   AvatarFallback,
@@ -78,16 +77,11 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
   const totalUnread = useTotalUnread();
   const unreadNotifications = useUnreadNotifications();
 
-  // The footer shows exactly one identity: the signed-in user. The
-  // account name is deliberately NOT rendered here — for shared
-  // accounts it duplicated the user row (and surfaced a second
-  // email-shaped string), which read as "two logged-in users".
+  // The footer shows exactly one identity: the signed-in user's name
+  // and avatar. No email, no account name, no member list — anything
+  // more read as "several logged-in users" in the bottom-left corner.
   // Account context lives in Settings → Overview instead.
-  //
-  // `profile.email` may hold the synthetic `<account>@local.fake`
-  // identifier, so it is stripped before display. Real emails pass
-  // through untouched.
-  const displayEmail = stripFakeEmail(profile?.email);
+  const displayName = profile?.full_name ?? t("defaultUser");
 
   // Close the drawer when route changes — users opened it to navigate,
   // so once they pick a destination the drawer should get out of the way.
@@ -269,13 +263,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
               </Avatar>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-foreground">
-                  {profile?.full_name ?? t("defaultUser")}
-                </p>
-                {/* No `truncate` here — the email is short once the
-                    synthetic domain is stripped, and truncating it
-                    produced the confusing `deway0773@gm...` display. */}
-                <p className="break-all text-xs text-muted-foreground">
-                  {displayEmail}
+                  {displayName}
                 </p>
               </div>
             </DropdownMenuTrigger>
