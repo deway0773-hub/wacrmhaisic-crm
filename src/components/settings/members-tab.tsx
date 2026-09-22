@@ -344,7 +344,7 @@ export function MembersTab() {
               // the right. Everything (daily cap, joined date, role
               // chip, remove) sits on one row with a consistent
               // gap-6 rhythm so nothing wraps to a second line.
-              className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-zinc-300 dark:hover:border-zinc-700"
+              className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900"
             >
               {/* Left: avatar (with presence dot) + name + "you" tag. */}
               <div className="flex min-w-0 items-center gap-3">
@@ -397,7 +397,7 @@ export function MembersTab() {
                     owner row (the owner isn't a round-robin target).
                     Empty = unlimited. */}
                 {canManageMembers && !isOwnerRow && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex w-40 items-center justify-end gap-2">
                     <label
                       htmlFor={`limit-${member.id}`}
                       className="text-xs text-zinc-500"
@@ -427,7 +427,7 @@ export function MembersTab() {
                                 e.currentTarget.blur();
                               }
                             }}
-                            className="h-8 w-16 rounded-md border border-border bg-muted px-2 text-center text-xs text-foreground tabular-nums placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+                            className="h-8 w-16 rounded-lg border border-zinc-200 bg-zinc-50 text-center text-xs text-zinc-900 tabular-nums transition-colors placeholder:text-zinc-400 hover:bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                           />
                         }
                       />
@@ -440,9 +440,23 @@ export function MembersTab() {
                   </div>
                 )}
 
+                {/* Owner row has no daily cap — show a muted
+                    "unlimited" placeholder so the right-hand action
+                    cluster keeps the same width across rows. */}
+                {isOwnerRow && (
+                  <div className="flex w-40 items-center justify-end gap-2">
+                    <span className="text-xs text-zinc-500">
+                      {t('limitLabel')}
+                    </span>
+                    <span className="text-xs text-zinc-400">
+                      {t('limitUnlimited')}
+                    </span>
+                  </div>
+                )}
+
                 {/* Joined date — hidden below md to keep the row
                     from wrapping on narrow screens. */}
-                <div className="hidden text-xs text-muted-foreground md:block">
+                <div className="hidden text-xs text-zinc-400 md:block">
                   {t('joined', { date: fmtDate(member.joined_at) })}
                 </div>
 
@@ -476,9 +490,9 @@ export function MembersTab() {
                   </Select>
                 ) : (
                   <span
-                    className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium ${roleMeta.className}`}
+                    className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium ${roleMeta.className}`}
                   >
-                    <RoleIcon className="size-3.5" />
+                    <RoleIcon className="size-3.5 shrink-0" />
                     {tRoles(member.role)}
                   </span>
                 )}
