@@ -440,20 +440,6 @@ export function MembersTab() {
                   </div>
                 )}
 
-                {/* Owner row has no daily cap — show a muted
-                    "unlimited" placeholder so the right-hand action
-                    cluster keeps the same width across rows. */}
-                {isOwnerRow && (
-                  <div className="flex w-40 items-center justify-end gap-2">
-                    <span className="text-xs text-zinc-500">
-                      {t('limitLabel')}
-                    </span>
-                    <span className="text-xs text-zinc-400">
-                      {t('limitUnlimited')}
-                    </span>
-                  </div>
-                )}
-
                 {/* Joined date — hidden below md to keep the row
                     from wrapping on narrow screens. */}
                 <div className="hidden text-xs text-zinc-400 md:block">
