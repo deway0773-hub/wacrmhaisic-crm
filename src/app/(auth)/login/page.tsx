@@ -41,8 +41,8 @@ function LoginPageInner() {
   const inviteToken = searchParams.get("invite");
   const t = useTranslations("LoginPage");
 
-  const [email, setEmail] = useState("zhengjiabao");
-  const [password, setPassword] = useState("1223456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
@@ -71,14 +71,15 @@ function LoginPageInner() {
       return;
     }
 
-    // 登录成功后把账号名写进全局 store（同时落 localStorage），
-    // 并清掉历史遗留的 `@local.fake` 假邮箱，避免右上角/总览卡片
-    // 回显旧数据。
+    // 登录成功后只把账号名写进全局 store 的 `account` 字段（用于
+    // 账号上下文），**不**写 `displayName` —— 显示名必须来自用户
+    // 资料里的 `full_name`（如「小郑」），否则界面会把账号名
+    // （如 `zhengjiabao`）当成用户名展示出来。
     const loginAccount = toDisplayAccount(loginEmail);
     setUser({
       username: loginAccount,
       account: loginAccount,
-      displayName: loginAccount,
+      displayName: "",
       avatar: null,
     });
 

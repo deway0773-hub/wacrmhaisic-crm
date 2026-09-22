@@ -6,8 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
-import { toDisplayAccount } from '@/lib/auth/account-name';
-import { hydrateUserStore, stripFakeEmail, useUserStore } from '@/store/user-store';
+import { hydrateUserStore, useUserStore } from '@/store/user-store';
 import { useTheme } from '@/hooks/use-theme';
 import { THEMES } from '@/lib/themes';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -151,15 +150,10 @@ export function SettingsOverview({
     };
   }, [user?.id, accountId, canManageMembers]);
 
-  // 账号名优先取全局 store（保存后立即重渲染），
-  // 冷启动时回退到 profile.email，并剥掉 `@local.fake` 假域名。
-  const accountName =
-    storeUser.username ||
-    storeUser.account ||
-    stripFakeEmail(profile?.email) ||
-    toDisplayAccount(profile?.email);
+  // 显示名只认用户资料里的 `full_name`（如「小郑」）。账号名
+  // （`zhengjiabao`）是登录标识，不是给人看的名字，绝不回退到它。
   const displayName =
-    storeUser.displayName || profile?.full_name || accountName || t('yourAccount');
+    storeUser.displayName || profile?.full_name || t('yourAccount');
   const initial = (displayName || 'U').charAt(0).toUpperCase();
   const avatarUrl = storeUser.avatar ?? profile?.avatar_url ?? null;
   const roleMeta = accountRole ? ROLE_META[accountRole] : null;
@@ -247,12 +241,6 @@ export function SettingsOverview({
           <div className="truncate text-base font-semibold text-foreground">
             {displayName}
           </div>
-          {accountName ? (
-            <div className="truncate text-sm text-muted-foreground">
-              {t('accountLabel')}
-              {accountName}
-            </div>
-          ) : null}
         </div>
         {roleMeta && RoleIcon ? (
           <SettingsChip variant={roleMeta.variant}>

@@ -4,8 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { toDisplayAccount } from "@/lib/auth/account-name";
-import { hydrateUserStore, stripFakeEmail, useUserStore } from "@/store/user-store";
+import { hydrateUserStore, useUserStore } from "@/store/user-store";
 import { LogOut, Menu, Settings as SettingsIcon, User } from "lucide-react";
 import {
   Avatar,
@@ -65,21 +64,13 @@ export function Header({ onOpenSidebar }: HeaderProps) {
     hydrateUserStore();
   }, []);
 
-  // 账号名优先取全局 store（保存后立即重渲染），
-  // 冷启动时回退到 profile.email，并剥掉 `@local.fake` 假域名。
-  const accountName =
-    storeUser.username ||
-    storeUser.account ||
-    stripFakeEmail(profile?.email) ||
-    toDisplayAccount(profile?.email);
+  // 显示名只认用户资料里的 `full_name`（如「小郑」）。账号名
+  // （`zhengjiabao`）是登录标识，不是给人看的名字，绝不回退到它。
   const displayName =
     storeUser.displayName || profile?.full_name || t("defaultUser");
   const avatarUrl = storeUser.avatar ?? profile?.avatar_url ?? null;
 
-  const initial =
-    displayName.charAt(0)?.toUpperCase() ??
-    accountName.charAt(0)?.toUpperCase() ??
-    "U";
+  const initial = displayName.charAt(0)?.toUpperCase() ?? "U";
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-4 lg:px-6">
@@ -126,9 +117,6 @@ export function Header({ onOpenSidebar }: HeaderProps) {
           <div className="px-2 py-1.5">
             <p className="truncate text-sm font-medium text-foreground">
               {displayName}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              {accountName}
             </p>
           </div>
           <DropdownMenuSeparator className="bg-border" />
