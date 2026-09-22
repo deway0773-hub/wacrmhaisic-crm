@@ -1790,6 +1790,8 @@
       "providerAndKey": "Provider & key",
       "encryptionNotice": "Your key is encrypted at rest (AES-256-GCM) and never shown again after saving.",
       "provider": "Provider",
+      "providerCustom": "Custom",
+      "providerCustomHint": "Custom (OpenAI-compatible)",
       "model": "Model",
       "baseUrl": "Base URL",
       "baseUrlPlaceholder": "https://api.deepseek.com",

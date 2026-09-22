@@ -1778,6 +1778,8 @@
       "providerAndKey": "提供商与密钥",
       "encryptionNotice": "你的密钥在静态时已加密（AES-256-GCM），保存后不再显示。",
       "provider": "提供商",
+      "providerCustom": "自定义",
+      "providerCustomHint": "自定义 (兼容 OpenAI 接口)",
       "model": "模型",
       "baseUrl": "接口地址（Base URL）",
       "baseUrlPlaceholder": "https://api.deepseek.com",

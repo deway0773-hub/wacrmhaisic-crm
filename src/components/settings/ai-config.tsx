@@ -42,8 +42,19 @@ const HANDOFF_QUEUE = '__queue__';
 const PROVIDER_LABEL: Record<AiProvider, string> = {
   openai: 'OpenAI',
   anthropic: 'Anthropic (Claude)',
-  custom: 'Custom (OpenAI-compatible)',
+  custom: 'Custom',
 };
+
+/**
+ * Localized label for the provider dropdown. OpenAI / Anthropic are brand
+ * names and stay as-is; the custom option is translated (zh: 自定义).
+ */
+function providerLabel(
+  provider: AiProvider,
+  t: (key: string) => string
+): string {
+  return provider === 'custom' ? t('providerCustom') : PROVIDER_LABEL[provider];
+}
 
 const KEY_PLACEHOLDER: Record<AiProvider, string> = {
   openai: 'sk-...',
@@ -131,8 +142,11 @@ export function AiConfig() {
   }, [accountId, fetchConfig]);
 
   // Swap the model default when the provider changes, unless the user
-  // typed a custom model.
+  // typed a custom model. Also drop any key typed for the previous
+  // provider — a key entered for OpenAI must not leak into Anthropic or
+  // a custom endpoint (and vice versa).
   const handleProviderChange = (next: AiProvider) => {
+    if (next === provider) return;
     setProvider(next);
     const isDefaultModel =
       model === AI_PROVIDER_DEFAULT_MODEL.openai ||
@@ -140,6 +154,13 @@ export function AiConfig() {
       model === AI_PROVIDER_DEFAULT_MODEL.custom ||
       model.trim() === '';
     if (isDefaultModel) setModel(AI_PROVIDER_DEFAULT_MODEL[next]);
+    // Clear the chat key unless it's the masked placeholder for a stored
+    // key (which belongs to the saved config, not the previous provider).
+    if (keyEdited) {
+      setApiKey('');
+      setKeyEdited(false);
+    }
+    // Embeddings key is provider-independent (always OpenAI), so leave it.
   };
 
   const keyPayload = () => (keyEdited ? apiKey.trim() : undefined);
@@ -291,16 +312,18 @@ export function AiConfig() {
                   onValueChange={(v) => handleProviderChange(v as AiProvider)}
                   disabled={disabled}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full min-w-[220px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="openai">{PROVIDER_LABEL.openai}</SelectItem>
+                    <SelectItem value="openai">
+                      {providerLabel('openai', t)}
+                    </SelectItem>
                     <SelectItem value="anthropic">
-                      {PROVIDER_LABEL.anthropic}
+                      {providerLabel('anthropic', t)}
                     </SelectItem>
                     <SelectItem value="custom">
-                      {PROVIDER_LABEL.custom}
+                      {providerLabel('custom', t)}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -357,7 +380,9 @@ export function AiConfig() {
                   }}
                   placeholder={KEY_PLACEHOLDER[provider]}
                   disabled={disabled}
-                  autoComplete="off"
+                  autoComplete="new-password"
+                  data-1p-ignore
+                  data-lpignore="true"
                   className="flex-1"
                 />
                 <Button
@@ -397,7 +422,9 @@ export function AiConfig() {
                 }}
                 placeholder="sk-... (OpenAI)"
                 disabled={disabled}
-                autoComplete="off"
+                autoComplete="new-password"
+                data-1p-ignore
+                data-lpignore="true"
               />
               <p className="text-xs text-muted-foreground">
                 {t('embeddingsHint', {
