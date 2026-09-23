@@ -24,6 +24,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ModeToggle } from "@/components/layout/mode-toggle";
+import { ROLE_META } from "@/components/settings/role-meta";
+import { SettingsChip } from "@/components/settings/settings-chip";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "dashboard",
@@ -104,7 +106,7 @@ export function Header({ onOpenSidebar }: HeaderProps) {
 
         <DropdownMenu>
         <DropdownMenuTrigger
-          className="flex items-center rounded-md p-1 transition-colors hover:bg-muted/70 focus:bg-muted/70 focus:outline-none data-popup-open:bg-muted/70"
+          className="flex items-center gap-2 rounded-md p-1 transition-colors hover:bg-muted/70 focus:bg-muted/70 focus:outline-none data-popup-open:bg-muted/70"
           aria-label={t("openAccountMenu")}
         >
           <Avatar className="size-8">
@@ -115,20 +117,22 @@ export function Header({ onOpenSidebar }: HeaderProps) {
               {initial}
             </AvatarFallback>
           </Avatar>
+          {/* 角色固定在头像旁边，随 `accountRole` 实时同步（资料保存后
+              `refreshProfile()` 会更新 context，无需刷新页面）。 */}
+          {accountRole ? (
+            <SettingsChip
+              variant={ROLE_META[accountRole].variant}
+              className="hidden sm:inline-flex"
+            >
+              {tRoles(accountRole)}
+            </SettingsChip>
+          ) : null}
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
           sideOffset={6}
           className="min-w-56 bg-popover text-popover-foreground ring-border"
         >
-          <div className="px-2 py-1.5">
-            {accountRole ? (
-              <p className="truncate text-sm font-medium text-foreground">
-                {tRoles(accountRole)}
-              </p>
-            ) : null}
-          </div>
-          <DropdownMenuSeparator className="bg-border" />
           <DropdownMenuItem
             render={
               <Link
