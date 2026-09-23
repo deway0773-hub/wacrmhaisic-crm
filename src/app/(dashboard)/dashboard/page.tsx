@@ -120,14 +120,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('description')}
-        </p>
-      </div>
-
       {/* Metric cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {metricsLoading || !metrics ? (

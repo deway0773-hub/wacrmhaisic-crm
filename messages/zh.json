@@ -49,6 +49,8 @@
     "pipelines": "销售管道",
     "broadcasts": "群发",
     "automations": "自动化",
+    "flows": "流程",
+    "agents": "AI 助手",
     "settings": "设置",
     "openMenu": "打开菜单",
     "openAccountMenu": "打开账户菜单",

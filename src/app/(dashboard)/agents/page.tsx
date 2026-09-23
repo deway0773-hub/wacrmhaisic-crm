@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Bot, Sparkles, Settings2, BarChart3 } from 'lucide-react';
+import { Sparkles, Settings2, BarChart3 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { AiPlayground } from '@/components/agents/ai-playground';
 import { AiUsageCard } from '@/components/agents/ai-usage';
@@ -38,16 +38,6 @@ export default function AgentsPage() {
 
   return (
     <div>
-      <div className="flex items-center gap-2">
-        <Bot className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          AI 智能体
-        </h1>
-      </div>
-      <p className="mt-1 text-sm text-muted-foreground">
-        使用你自己的密钥配置 AI 智能体，然后在 Playground 中测试，确认无误后再让它在收件箱中回复客户。
-      </p>
-
       {decided && (
         <Tabs
           value={tab}
