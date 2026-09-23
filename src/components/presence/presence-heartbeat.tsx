@@ -5,6 +5,11 @@ import { useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { HEARTBEAT_MS, IDLE_AFTER_MS, type StoredPresence } from "@/lib/presence";
+import {
+  shouldHeartbeat,
+  toStoredPresence,
+  usePresenceStore,
+} from "@/store/presence-store";
 
 /**
  * PresenceHeartbeat — headless. Mount ONCE per signed-in dashboard tab

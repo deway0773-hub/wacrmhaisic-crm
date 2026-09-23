@@ -58,6 +58,16 @@
     "menuSettings": "Settings",
     "menuSignOut": "Sign out"
   },
+  "Presence": {
+    "label": "Presence",
+    "online": "Online",
+    "busy": "Busy",
+    "offline": "Offline",
+    "tooltipOnline": "Accepting new conversations",
+    "tooltipBusy": "Busy — assignments paused",
+    "tooltipOffline": "Offline — not accepting assignments",
+    "updated": "Status changed to {status}"
+  },
   "ModeToggle": {
     "switchMode": "Switch to {mode}",
     "light": "Light mode",

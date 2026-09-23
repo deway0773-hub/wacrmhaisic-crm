@@ -58,6 +58,16 @@
     "menuSettings": "设置",
     "menuSignOut": "退出登录"
   },
+  "Presence": {
+    "label": "在线状态",
+    "online": "在线",
+    "busy": "忙碌",
+    "offline": "离线",
+    "tooltipOnline": "接收新会话",
+    "tooltipBusy": "忙碌中，暂停分配",
+    "tooltipOffline": "离线，不接收分配",
+    "updated": "状态已切换为{status}"
+  },
   "ModeToggle": {
     "switchMode": "切换到 {mode} 模式",
     "light": "浅色模式",
