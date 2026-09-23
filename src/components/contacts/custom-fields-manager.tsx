@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createClient, isRealtimeHealthy, describeRealtimeStatus } from '@/lib/supabase/client';
+import type { RealtimeStatus } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 import type { CustomField } from '@/types';
@@ -30,6 +31,10 @@ import { useTranslations } from 'next-intl';
 interface CustomFieldsManagerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Fired after a field is created/renamed/deleted so the caller can
+   *  refresh anything derived from the field catalogue (e.g. the
+   *  contacts table's dynamic columns). */
+  onFieldsChanged?: () => void;
 }
 
 /**
@@ -41,18 +46,19 @@ interface CustomFieldsManagerProps {
 export function CustomFieldsManager({
   open,
   onOpenChange,
+  onFieldsChanged,
 }: CustomFieldsManagerProps) {
   const t = useTranslations('Contacts.customFields');
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-border bg-popover text-popover-foreground sm:max-w-md">
+      <DialogContent className="border-border bg-popover text-popover-foreground w-full sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-popover-foreground">{t('title')}</DialogTitle>
           <DialogDescription className="text-muted-foreground">
             {t('desc')}
           </DialogDescription>
         </DialogHeader>
-        <CustomFieldsPanel />
+        <CustomFieldsPanel onFieldsChanged={onFieldsChanged} />
       </DialogContent>
     </Dialog>
   );
@@ -64,7 +70,11 @@ export function CustomFieldsManager({
  * this only manages the field catalogue. Admin+ gated by the caller — the
  * `custom_fields` RLS also rejects non-admin writes as defense in depth.
  */
-export function CustomFieldsPanel() {
+export function CustomFieldsPanel({
+  onFieldsChanged,
+}: {
+  onFieldsChanged?: () => void;
+} = {}) {
   const t = useTranslations('Contacts.customFields');
   const supabase = createClient();
   const { user, accountId } = useAuth();
@@ -76,16 +86,52 @@ export function CustomFieldsPanel() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<CustomField | null>(null);
 
+  // Realtime is a *nice-to-have* here: the list is always loaded with a
+  // plain `select()` first, so a dead websocket must never leave the panel
+  // stuck on "no fields yet". We only warn once per mount to avoid spamming
+  // the console/toast on every reconnect attempt.
+  const realtimeWarned = useRef(false);
+
   const fetchFields = useCallback(async () => {
+    console.log('accountId', accountId);
     if (!accountId) return;
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('custom_fields')
       .select('*')
+      .eq('account_id', accountId)
       .order('field_name');
-    setFields((data as CustomField[] | null) ?? []);
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+    let rows = (data as CustomField[] | null) ?? [];
+
+    // Fallback: if the account-scoped query came back empty, look for
+    // rows with a NULL / mismatched account_id (legacy dirty data) so
+    // the user can see them instead of a misleading "no fields yet".
+    if (rows.length === 0) {
+      const { data: allData, error: allError } = await supabase
+        .from('custom_fields')
+        .select('*')
+        .order('field_name');
+      if (allError) {
+        toast.error(allError.message);
+        setLoading(false);
+        return;
+      }
+      const all = (allData as CustomField[] | null) ?? [];
+      const orphans = all.filter((f) => f.account_id !== accountId);
+      if (orphans.length > 0) {
+        toast.warning(t('toastOrphanFields', { count: orphans.length }));
+        rows = all;
+      }
+    }
+
+    setFields(rows);
     setLoading(false);
-  }, [supabase, accountId]);
+  }, [supabase, accountId, t]);
 
   // Load the field list on mount once the account is known. The setters
   // inside fetchFields run after the Supabase await — not synchronously in
@@ -96,6 +142,46 @@ export function CustomFieldsPanel() {
       fetchFields();
     }
   }, [accountId, fetchFields]);
+
+  // Incremental refresh only. If Realtime is unavailable (table not added to
+  // the publication, websocket blocked, …) we log + toast once and carry on
+  // with the data the initial `select()` already loaded.
+  useEffect(() => {
+    if (!accountId) return;
+
+    const channel = supabase
+      .channel(`custom_fields:${accountId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'custom_fields',
+          filter: `account_id=eq.${accountId}`,
+        },
+        () => {
+          void fetchFields();
+        }
+      )
+      .subscribe((status) => {
+        const realtimeStatus = status as RealtimeStatus;
+        console.log('[custom_fields] realtime status:', realtimeStatus);
+        if (isRealtimeHealthy(realtimeStatus)) {
+          realtimeWarned.current = false;
+          return;
+        }
+        if (realtimeWarned.current) return;
+        realtimeWarned.current = true;
+        console.warn(
+          `[custom_fields] realtime unavailable (${realtimeStatus}): ${describeRealtimeStatus(realtimeStatus)}`
+        );
+        toast.warning(t('toastRealtimeUnavailable'));
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, accountId, fetchFields, t]);
 
   /** Case-insensitive name clash within the loaded list. */
   function isDuplicate(name: string, exceptId?: string): boolean {
@@ -133,6 +219,7 @@ export function CustomFieldsPanel() {
     toast.success(t('toastCreated', { name }));
     setNewName('');
     await fetchFields();
+    onFieldsChanged?.();
   }
 
   /** Returns true on success so the row can keep the new name, false so it
@@ -158,6 +245,7 @@ export function CustomFieldsPanel() {
       return false;
     }
     await fetchFields();
+    onFieldsChanged?.();
     return true;
   }
 
@@ -174,6 +262,7 @@ export function CustomFieldsPanel() {
     }
     toast.success(t('toastDeleted', { name: field.field_name }));
     await fetchFields();
+    onFieldsChanged?.();
   }
 
   return (
@@ -190,7 +279,7 @@ export function CustomFieldsPanel() {
             }
           }}
           placeholder={t('fieldName')}
-          className="h-10 bg-muted text-foreground"
+          className="h-10 bg-muted pl-3 text-foreground"
         />
         <Button
           onClick={handleCreate}

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { addContactTag, deleteContactTag } from '@/lib/contacts/tag-api';
 import { toast } from 'sonner';
-import type { Contact, Tag, ContactTag } from '@/types';
+import type { Contact, Tag, ContactTag, CustomField } from '@/types';
 import {
   findExistingContact,
   isExactMatch,
@@ -70,6 +70,11 @@ export function ContactForm({
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
 
+  // Account-wide custom field definitions + the values typed for this
+  // contact. Optional — blank values are simply not persisted.
+  const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [customValues, setCustomValues] = useState<Record<string, string>>({});
+
   useEffect(() => {
     if (open) {
       setName(contact?.name ?? '');
@@ -79,6 +84,7 @@ export function ContactForm({
       setSelectedTagIds(contactTags.map((ct) => ct.tag_id));
       setDupMatch(null);
       fetchTags();
+      fetchCustomFields();
     }
   }, [open, contact]);
 
@@ -112,6 +118,31 @@ export function ContactForm({
       .order('name');
     if (data) setTags(data);
     setLoadingTags(false);
+  }
+
+  // Load the field catalogue and, when editing, the contact's saved values.
+  async function fetchCustomFields() {
+    if (!accountId) return;
+    const { data: fields } = await supabase
+      .from('custom_fields')
+      .select('*')
+      .eq('account_id', accountId)
+      .order('field_name');
+    setCustomFields((fields as CustomField[] | null) ?? []);
+
+    if (contact?.id) {
+      const { data: values } = await supabase
+        .from('contact_custom_values')
+        .select('custom_field_id, value')
+        .eq('contact_id', contact.id);
+      const map: Record<string, string> = {};
+      values?.forEach((v) => {
+        map[v.custom_field_id] = v.value ?? '';
+      });
+      setCustomValues(map);
+    } else {
+      setCustomValues({});
+    }
   }
 
   function toggleTag(tagId: string) {
@@ -190,6 +221,32 @@ export function ContactForm({
         }
         for (const tagId of toAdd) {
           await addContactTag(contactId, tagId);
+        }
+      }
+
+      // Sync custom field values. Blank inputs are skipped (and any
+      // previously saved value for that field is removed) so an empty
+      // box means "no value" rather than an empty string.
+      if (contactId && customFields.length > 0) {
+        const rows = customFields
+          .map((field) => ({
+            contact_id: contactId as string,
+            custom_field_id: field.id,
+            value: (customValues[field.id] ?? '').trim(),
+          }))
+          .filter((row) => row.value.length > 0);
+
+        const { error: clearError } = await supabase
+          .from('contact_custom_values')
+          .delete()
+          .eq('contact_id', contactId);
+        if (clearError) throw clearError;
+
+        if (rows.length > 0) {
+          const { error: insertError } = await supabase
+            .from('contact_custom_values')
+            .insert(rows);
+          if (insertError) throw insertError;
         }
       }
 
@@ -361,6 +418,40 @@ export function ContactForm({
               </div>
             )}
           </div>
+
+          {customFields.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">
+                {t('customFieldsLabel')}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t('customFieldsHint')}
+              </p>
+              <div className="space-y-2">
+                {customFields.map((field) => (
+                  <div key={field.id} className="space-y-1">
+                    <Label
+                      htmlFor={`cf-custom-${field.id}`}
+                      className="text-xs text-muted-foreground"
+                    >
+                      {field.field_name}
+                    </Label>
+                    <Input
+                      id={`cf-custom-${field.id}`}
+                      value={customValues[field.id] ?? ''}
+                      onChange={(e) =>
+                        setCustomValues((prev) => ({
+                          ...prev,
+                          [field.id]: e.target.value,
+                        }))
+                      }
+                      className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <DialogFooter className="bg-popover border-border">
             <Button

@@ -341,6 +341,12 @@
         "tags": "Tags",
         "createdAt": "Created"
       },
+      "manageColumns": "Custom fields",
+      "manageColumnsTitle": "Show custom field columns",
+      "manageColumnsDesc": "Pick which custom fields appear as table columns.",
+      "manageColumnsEmpty": "No custom fields yet. Create them in Settings.",
+      "toastOrphanFields": "Found {count} custom field(s) not linked to this account (null or mismatched account_id). Showing them anyway — please review the data.",
+      "toastRealtimeUnavailable": "Live sync is unavailable, but your data is still shown. Enable Realtime for this table in Supabase.",
       "loading": "Loading contacts...",
       "noContactsMatch": "No contacts match your filters.",
       "noContactsYet": "No contacts yet.",
@@ -393,7 +399,9 @@
       "dupSimilar": "A contact with a very similar number already exists.",
       "loadingTags": "Loading tags...",
       "noTagsAvailable": "No tags available. Create tags in Settings.",
-      "phoneRequired": "Phone number is required"
+      "phoneRequired": "Phone number is required",
+      "customFieldsLabel": "Custom fields",
+      "customFieldsHint": "Optional. Leave blank to skip saving a field."
     },
     "detailView": {
       "tabs": {
@@ -518,7 +526,9 @@
       "toastCreated": "Created \"{name}\".",
       "toastRenameFailed": "Could not rename field.",
       "toastDeleteFailed": "Could not delete field.",
-      "toastDeleted": "Deleted \"{name}\"."
+      "toastDeleted": "Deleted \"{name}\".",
+      "toastOrphanFields": "Found {count} field(s) not linked to this account (null or mismatched account_id). Showing them anyway — please review the data.",
+      "toastRealtimeUnavailable": "Live sync is unavailable, but the field list is still shown. Enable Realtime for this table in Supabase."
     }
   },
   "Pipelines": {

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, isRealtimeHealthy, describeRealtimeStatus } from '@/lib/supabase/client';
+import type { RealtimeStatus } from '@/lib/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
-import type { Contact, Tag, ContactTag } from '@/types';
+import type { Contact, Tag, ContactTag, CustomField } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -49,6 +51,7 @@ import {
   SlidersHorizontal,
   Filter,
   X,
+  Columns3,
 } from 'lucide-react';
 import { ContactForm } from '@/components/contacts/contact-form';
 import { ContactDetailView } from '@/components/contacts/contact-detail-view';
@@ -67,6 +70,7 @@ interface ContactWithTags extends Contact {
 export default function ContactsPage() {
   const t = useTranslations('Contacts.page');
   const supabase = createClient();
+  const { accountId } = useAuth();
   const canEdit = useCan('send-messages');
   const canEditSettings = useCan('edit-settings');
 
@@ -97,11 +101,25 @@ export default function ContactsPage() {
   // All tags for display
   const [tagsMap, setTagsMap] = useState<Record<string, Tag>>({});
 
+  // Custom field definitions (account-wide) + per-contact values for the
+  // current page. `visibleFieldIds` drives which of them render as columns.
+  const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [customValues, setCustomValues] = useState<
+    Record<string, Record<string, string>>
+  >({});
+  const [visibleFieldIds, setVisibleFieldIds] = useState<string[]>([]);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+
   // Guards against out-of-order fetch responses: each fetchContacts run
   // claims a sequence number and only the latest is allowed to commit its
   // results. Without this, rapidly toggling tag filters could let a slower
   // earlier request resolve last and render stale rows.
   const fetchSeq = useRef(0);
+
+  // Realtime is only an incremental refresh here — the initial load always
+  // goes through a plain `select()`, so a broken websocket can never leave
+  // the page blank. Warn once per mount instead of on every retry.
+  const realtimeWarned = useRef(false);
 
   const fetchTags = useCallback(async () => {
     const { data } = await supabase.from('tags').select('*');
@@ -117,6 +135,53 @@ export default function ContactsPage() {
       });
     }
   }, [supabase]);
+
+  // Load the account's custom field definitions. Newly created fields are
+  // auto-shown as columns; fields the user explicitly hid stay hidden.
+  const fetchCustomFields = useCallback(async () => {
+    if (!accountId) return;
+    const { data, error } = await supabase
+      .from('custom_fields')
+      .select('*')
+      .eq('account_id', accountId)
+      .order('field_name');
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    let fields = (data as CustomField[] | null) ?? [];
+
+    // Fallback: surface legacy rows whose account_id is null / mismatched
+    // instead of silently rendering no columns.
+    if (fields.length === 0) {
+      const { data: allData, error: allError } = await supabase
+        .from('custom_fields')
+        .select('*')
+        .order('field_name');
+      if (allError) {
+        toast.error(allError.message);
+        return;
+      }
+      const all = (allData as CustomField[] | null) ?? [];
+      const orphans = all.filter((f) => f.account_id !== accountId);
+      if (orphans.length > 0) {
+        toast.warning(t('toastOrphanFields', { count: orphans.length }));
+        fields = all;
+      }
+    }
+
+    setCustomFields(fields);
+    setVisibleFieldIds((prev) => {
+      const ids = new Set(fields.map((f) => f.id));
+      // Keep the user's existing choices (minus deleted fields) and add
+      // any field that appeared since the last load.
+      const kept = prev.filter((id) => ids.has(id));
+      const added = fields
+        .filter((f) => !prev.includes(f.id))
+        .map((f) => f.id);
+      return [...kept, ...added];
+    });
+  }, [supabase, accountId, t]);
 
   const fetchContacts = useCallback(async () => {
     const seq = ++fetchSeq.current;
@@ -205,6 +270,22 @@ export default function ContactsPage() {
         .filter(Boolean),
     }));
 
+    // Custom field values for these contacts. `contact_custom_values` has
+    // no account_id column, so tenancy is enforced by the contacts join
+    // (RLS) — we only ever ask for ids we just loaded.
+    const { data: customValueRows } = await supabase
+      .from('contact_custom_values')
+      .select('contact_id, custom_field_id, value')
+      .in('contact_id', contactIds);
+    if (seq !== fetchSeq.current) return; // superseded by a newer fetch
+
+    const valuesByContact: Record<string, Record<string, string>> = {};
+    customValueRows?.forEach((v) => {
+      if (!valuesByContact[v.contact_id]) valuesByContact[v.contact_id] = {};
+      valuesByContact[v.contact_id][v.custom_field_id] = v.value ?? '';
+    });
+    setCustomValues(valuesByContact);
+
     setContacts(enriched);
     setLoading(false);
   }, [supabase, page, search, selectedTagIds, tagsMap, t]);
@@ -217,6 +298,51 @@ export default function ContactsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTags();
   }, [fetchTags]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchCustomFields();
+  }, [fetchCustomFields]);
+
+  // Incremental refresh of the custom-field catalogue (and therefore the
+  // dynamic table columns). Non-blocking: if Realtime is down we log + toast
+  // once and keep whatever the initial `select()` returned.
+  useEffect(() => {
+    if (!accountId) return;
+
+    const channel = supabase
+      .channel(`custom_fields:${accountId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'custom_fields',
+          filter: `account_id=eq.${accountId}`,
+        },
+        () => {
+          void fetchCustomFields();
+        }
+      )
+      .subscribe((status) => {
+        const realtimeStatus = status as RealtimeStatus;
+        console.log('[contacts] custom_fields realtime status:', realtimeStatus);
+        if (isRealtimeHealthy(realtimeStatus)) {
+          realtimeWarned.current = false;
+          return;
+        }
+        if (realtimeWarned.current) return;
+        realtimeWarned.current = true;
+        console.warn(
+          `[contacts] realtime unavailable (${realtimeStatus}): ${describeRealtimeStatus(realtimeStatus)}`
+        );
+        toast.warning(t('toastRealtimeUnavailable'));
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, accountId, fetchCustomFields, t]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -325,6 +451,19 @@ export default function ContactsPage() {
   );
   const hasActiveFilters = search.trim().length > 0 || selectedTagIds.length > 0;
 
+  // Custom field columns actually rendered, in definition order.
+  const visibleFields = customFields.filter((f) =>
+    visibleFieldIds.includes(f.id)
+  );
+
+  function toggleFieldColumn(fieldId: string) {
+    setVisibleFieldIds((prev) =>
+      prev.includes(fieldId)
+        ? prev.filter((id) => id !== fieldId)
+        : [...prev, fieldId]
+    );
+  }
+
   function toggleTagFilter(tagId: string) {
     setSelectedTagIds((prev) =>
       prev.includes(tagId)
@@ -344,6 +483,53 @@ export default function ContactsPage() {
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
         <div className="flex items-center gap-2">
+          {customFields.length > 0 && (
+            <Popover open={columnsOpen} onOpenChange={setColumnsOpen}>
+              <PopoverTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    className="border-border text-muted-foreground hover:bg-muted"
+                  />
+                }
+              >
+                <Columns3 className="size-4" />
+                {t('manageColumns')}
+                {visibleFields.length > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">
+                    {visibleFields.length}
+                  </span>
+                )}
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-64 p-0">
+                <div className="border-b border-border px-3 py-2">
+                  <p className="text-sm font-medium text-popover-foreground">
+                    {t('manageColumnsTitle')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('manageColumnsDesc')}
+                  </p>
+                </div>
+                <div className="max-h-64 overflow-y-auto py-1">
+                  {customFields.map((field) => (
+                    <label
+                      key={field.id}
+                      className="flex cursor-pointer items-center gap-2.5 px-3 py-1.5 hover:bg-muted/50"
+                    >
+                      <Checkbox
+                        checked={visibleFieldIds.includes(field.id)}
+                        onCheckedChange={() => toggleFieldColumn(field.id)}
+                        aria-label={field.field_name}
+                      />
+                      <span className="truncate text-sm text-popover-foreground">
+                        {field.field_name}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
           {canEditSettings && (
             <Button
               variant="outline"
@@ -541,13 +727,21 @@ export default function ContactsPage() {
               <TableHead className="text-muted-foreground hidden lg:table-cell">{t('tableColumns.company')}</TableHead>
               <TableHead className="text-muted-foreground hidden md:table-cell">{t('tableColumns.tags')}</TableHead>
               <TableHead className="text-muted-foreground hidden lg:table-cell">{t('tableColumns.createdAt')}</TableHead>
+              {visibleFields.map((field) => (
+                <TableHead
+                  key={field.id}
+                  className="text-muted-foreground hidden xl:table-cell"
+                >
+                  {field.field_name}
+                </TableHead>
+              ))}
               <TableHead className="text-muted-foreground w-12" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow className="border-border">
-                <TableCell colSpan={8} className="text-center py-12">
+                <TableCell colSpan={8 + visibleFields.length} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
                     <Loader2 className="size-6 animate-spin text-primary" />
                     <p className="text-sm text-muted-foreground">{t('loading')}</p>
@@ -556,7 +750,7 @@ export default function ContactsPage() {
               </TableRow>
             ) : contacts.length === 0 ? (
               <TableRow className="border-border">
-                <TableCell colSpan={8} className="text-center py-12">
+                <TableCell colSpan={8 + visibleFields.length} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
                     <Users className="size-8 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">
@@ -638,6 +832,21 @@ export default function ContactsPage() {
                       year: 'numeric',
                     })}
                   </TableCell>
+                  {visibleFields.map((field) => {
+                    const value = customValues[contact.id]?.[field.id];
+                    return (
+                      <TableCell
+                        key={field.id}
+                        className="text-muted-foreground hidden xl:table-cell text-sm"
+                      >
+                        {value ? (
+                          value
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                    );
+                  })}
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger
@@ -759,6 +968,7 @@ export default function ContactsPage() {
         <CustomFieldsManager
           open={customFieldsOpen}
           onOpenChange={setCustomFieldsOpen}
+          onFieldsChanged={fetchCustomFields}
         />
       )}
 

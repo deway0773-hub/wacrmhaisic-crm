@@ -341,6 +341,12 @@
         "tags": "标签",
         "createdAt": "创建于"
       },
+      "manageColumns": "自定义字段",
+      "manageColumnsTitle": "显示自定义字段列",
+      "manageColumnsDesc": "勾选要在表格中显示的自定义字段列。",
+      "manageColumnsEmpty": "暂无自定义字段。请在设置中创建。",
+      "toastOrphanFields": "发现 {count} 个未关联到当前账户的自定义字段（account_id 为空或不匹配），已一并显示。请检查数据。",
+      "toastRealtimeUnavailable": "实时同步不可用，数据仍可正常查看。请在 Supabase 后台开启 Realtime。",
       "loading": "正在加载联系人...",
       "noContactsMatch": "没有符合筛选条件的联系人。",
       "noContactsYet": "暂无联系人。",
@@ -393,7 +399,9 @@
       "dupSimilar": "已存在手机号非常相似的联系人。",
       "loadingTags": "正在加载标签...",
       "noTagsAvailable": "暂无可用标签。请在设置中创建。",
-      "phoneRequired": "手机号为必填"
+      "phoneRequired": "手机号为必填",
+      "customFieldsLabel": "自定义字段",
+      "customFieldsHint": "可选。留空则不保存该字段。"
     },
     "detailView": {
       "tabs": {
@@ -518,7 +526,9 @@
       "toastCreated": "已创建“{name}”。",
       "toastRenameFailed": "无法重命名该字段。",
       "toastDeleteFailed": "无法删除该字段。",
-      "toastDeleted": "已删除 “{name}”。"
+      "toastDeleted": "已删除 “{name}”。",
+      "toastOrphanFields": "发现 {count} 个未关联到当前账户的字段（account_id 为空或不匹配），已一并显示。请检查数据。",
+      "toastRealtimeUnavailable": "实时同步不可用，字段列表仍可正常查看。请在 Supabase 后台开启 Realtime。"
     }
   },
   "Pipelines": {
