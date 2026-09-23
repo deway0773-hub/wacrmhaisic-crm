@@ -194,6 +194,17 @@ export const useUserStore = create<UserStore>((set, get) => ({
 }));
 
 /**
+ * Merge a partial update into the current user and persist it.
+ *
+ * Standalone wrapper around the store's `patchUser` action so callers
+ * (e.g. `use-auth` after a profile fetch) can update the display shape
+ * without subscribing to the store. Safe to call outside React.
+ */
+export function patchUser(patch: Partial<UserState>): void {
+  useUserStore.getState().patchUser(patch);
+}
+
+/**
  * Pull the persisted user into the store. Safe to call repeatedly —
  * call it from an effect once the component mounts.
  */

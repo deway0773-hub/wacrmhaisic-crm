@@ -14,6 +14,19 @@ export interface Profile {
   id: string;
   user_id: string;
   full_name: string;
+  /**
+   * Explicit display name (migration 050). Kept in step with
+   * `full_name` by a DB trigger, so it is always populated for rows
+   * created after that migration. `full_name` remains the fallback
+   * for older deployments that haven't run it yet.
+   */
+  display_name?: string | null;
+  /**
+   * Manual presence status (migration 051). One of `online`, `busy`,
+   * `offline`; defaults to `online`. Optional on the type because
+   * older serialised payloads may predate the column.
+   */
+  presence_status?: string | null;
   email: string;
   avatar_url?: string;
   /**

@@ -151,10 +151,14 @@ export function ProfileForm() {
       const nextAccountEmail = normalizeAccountToEmail(trimmedAccount);
 
       // Persist name + account + avatar to profiles.
+      // `display_name` is written explicitly (not just via the
+      // `profiles_sync_display_name` trigger) so the editable display
+      // name is the single source of truth for every surface.
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
           full_name: trimmedName,
+          display_name: trimmedName,
           email: nextAccountEmail,
           avatar_url: nextAvatarUrl,
         })
@@ -196,6 +200,7 @@ export function ProfileForm() {
   const dirty =
     !!profile &&
     (fullName.trim() !== (profile.full_name ?? '') ||
+      fullName.trim() !== (profile.display_name ?? '') ||
       account.trim().toLowerCase() !==
         toDisplayAccount(profile.email).toLowerCase() ||
       pendingAvatar !== null ||
