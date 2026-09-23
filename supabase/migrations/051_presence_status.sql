@@ -1,0 +1,1 @@
+alter table public.profiles add column if not exists presence_status text check (presence_status in ('online','busy','offline')) default 'online';
