@@ -98,7 +98,15 @@ function readPersistedUser(): UserState {
     // `email` may hold the legacy `<account>@local.fake` value, so it
     // is cleaned before it can reach the UI.
     const username = stripFakeEmail(pick('username', 'account', 'email'));
-    const displayName = pick('displayName', 'full_name', 'name') || username;
+
+    // The account name (`zhengjiabao`) is a login identifier, not a
+    // name meant for humans. Never fall back to it: a persisted blob
+    // written before the user set a display name would otherwise make
+    // the header render the account name. An empty string lets the
+    // caller fall through to `profile.full_name` instead.
+    let displayName = pick('displayName', 'full_name', 'name');
+    if (displayName && displayName === username) displayName = '';
+
     const avatarRaw = parsed.avatar ?? parsed.avatar_url;
 
     return {
@@ -126,6 +134,13 @@ function persistUser(user: UserState): void {
     // `username` / `account` / `email` all carry the bare account name
     // so legacy readers never see the synthetic `@local.fake` domain.
     const account = stripFakeEmail(user.username || user.account);
+
+    // Guard the same invariant on the way out: a display name that is
+    // really just the account name is not a display name. Persisting it
+    // would poison the next `readPersistedUser()`.
+    const displayName =
+      user.displayName && user.displayName !== account ? user.displayName : '';
+
     window.localStorage.setItem(
       USER_STORAGE_KEY,
       JSON.stringify({
@@ -133,8 +148,8 @@ function persistUser(user: UserState): void {
         username: account,
         account,
         email: account,
-        displayName: user.displayName,
-        full_name: user.displayName,
+        displayName,
+        full_name: displayName,
         avatar: user.avatar,
         avatar_url: user.avatar,
       }),

@@ -13,6 +13,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { patchUser } from "@/store/user-store";
 import {
   canEditSettings as canEditSettingsFor,
   canManageMembers as canManageMembersFor,
@@ -277,6 +278,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           account_id: data.account_id ?? null,
           account_role: accountRole,
         });
+
+        // Keep the display store in step with the authoritative profile
+        // row. The store is seeded at login with an empty display name
+        // (the account name is a login identifier, not a name for
+        // humans), so without this the header would keep rendering
+        // whatever stale blob `localStorage` held. Only the display
+        // fields are touched — `username`/`account` stay as the caller
+        // set them.
+        patchUser({
+          displayName: data.full_name ?? "",
+          avatar: data.avatar_url ?? null,
+        });
+
         setAccount(accountRow);
         if (!data.account_id || !accountRole) {
           // The row exists but carries no tenancy. Migration 017 made
