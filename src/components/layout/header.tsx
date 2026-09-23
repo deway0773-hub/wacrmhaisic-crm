@@ -122,11 +122,8 @@ export function Header({ onOpenSidebar }: HeaderProps) {
           className="min-w-56 bg-popover text-popover-foreground ring-border"
         >
           <div className="px-2 py-1.5">
-            <p className="truncate text-sm font-medium text-foreground">
-              {displayName}
-            </p>
             {accountRole ? (
-              <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              <p className="truncate text-sm font-medium text-foreground">
                 {tRoles(accountRole)}
               </p>
             ) : null}
