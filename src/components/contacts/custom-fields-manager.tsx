@@ -244,14 +244,14 @@ export function CustomFieldsPanel() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogCancel className="w-auto">{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 const target = pendingDelete;
                 setPendingDelete(null);
                 if (target) void handleDelete(target);
               }}
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="w-auto bg-red-600 text-white hover:bg-red-700"
             >
               {t('deleteAction')}
             </AlertDialogAction>

@@ -509,6 +509,7 @@
       "deleteTitle": "Delete field",
       "deleteConfirm": "Delete \"{name}\"? This also removes its stored value on every contact. This cannot be undone.",
       "deleteAction": "Delete",
+      "cancel": "Cancel",
       "toastNoAccount": "Your profile is not linked to an account.",
       "toastDuplicate": "A field named \"{name}\" already exists.",
       "toastCreateFailed": "Could not create field. You may not have permission.",

@@ -509,6 +509,7 @@
       "deleteTitle": "删除字段",
       "deleteConfirm": "删除“{name}”？这也会移除每个联系人中保存的字段值，且无法撤销。",
       "deleteAction": "确认删除",
+      "cancel": "取消",
       "toastNoAccount": "您的个人资料未关联到任何账户。",
       "toastDuplicate": "名为 “{name}” 的字段已存在。",
       "toastCreateFailed": "无法创建字段。您可能没有权限。",
