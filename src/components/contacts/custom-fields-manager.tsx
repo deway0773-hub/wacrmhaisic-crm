@@ -190,12 +190,12 @@ export function CustomFieldsPanel() {
             }
           }}
           placeholder={t('fieldName')}
-          className="bg-muted text-foreground"
+          className="h-10 bg-muted text-foreground"
         />
         <Button
           onClick={handleCreate}
           disabled={creating || !newName.trim()}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground shrink-0"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground h-10 shrink-0"
         >
           {creating ? (
             <Loader2 className="size-4 animate-spin" />
@@ -288,7 +288,7 @@ function FieldRow({
   }
 
   return (
-    <li className="flex items-center gap-2 px-3 py-2">
+    <li className="flex h-10 items-center gap-2 px-3">
       <Input
         value={name}
         disabled={busy}
@@ -298,7 +298,7 @@ function FieldRow({
           if (e.key === 'Enter') e.currentTarget.blur();
         }}
         aria-label={t('renameAria', { name: field.field_name })}
-        className="focus:border-primary h-8 border-transparent bg-transparent text-foreground hover:border-border"
+        className="focus:border-primary h-10 border-transparent bg-transparent text-foreground hover:border-border"
       />
       <Button
         variant="ghost"
