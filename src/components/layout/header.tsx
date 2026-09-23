@@ -54,8 +54,9 @@ import { useTranslations } from "next-intl";
 
 export function Header({ onOpenSidebar }: HeaderProps) {
   const t = useTranslations("Header");
+  const tRoles = useTranslations("Settings.roles");
   const pathname = usePathname();
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, accountRole } = useAuth();
   const titleKey = getPageTitleKey(pathname);
 
   // Reactive display identity. Reading from the store (instead of
@@ -103,7 +104,7 @@ export function Header({ onOpenSidebar }: HeaderProps) {
 
         <DropdownMenu>
         <DropdownMenuTrigger
-          className="flex items-center gap-2 rounded-md px-1 py-1 transition-colors hover:bg-muted/70 focus:bg-muted/70 focus:outline-none data-popup-open:bg-muted/70 sm:gap-3 sm:pl-1 sm:pr-3"
+          className="flex items-center rounded-md p-1 transition-colors hover:bg-muted/70 focus:bg-muted/70 focus:outline-none data-popup-open:bg-muted/70"
           aria-label={t("openAccountMenu")}
         >
           <Avatar className="size-8">
@@ -114,9 +115,6 @@ export function Header({ onOpenSidebar }: HeaderProps) {
               {initial}
             </AvatarFallback>
           </Avatar>
-          <span className="hidden text-sm font-medium text-foreground sm:inline">
-            {displayName}
-          </span>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
@@ -127,6 +125,11 @@ export function Header({ onOpenSidebar }: HeaderProps) {
             <p className="truncate text-sm font-medium text-foreground">
               {displayName}
             </p>
+            {accountRole ? (
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                {tRoles(accountRole)}
+              </p>
+            ) : null}
           </div>
           <DropdownMenuSeparator className="bg-border" />
           <DropdownMenuItem
