@@ -67,6 +67,7 @@ import {
   PresenceDot,
 } from '@/components/presence/presence-dot';
 import { CreateMemberDialog } from '@/components/CreateMemberButton';
+import { displayInitial } from '@/store/user-store';
 import { SettingsPanelHead } from './settings-panel-head';
 import { ROLE_META } from './role-meta';
 
@@ -355,13 +356,11 @@ export function MembersTab() {
                         {member.avatar_url ? (
                           <AvatarImage
                             src={member.avatar_url}
-                            alt={member.full_name || '成员'}
+                            alt={member.full_name || t('unnamed')}
                           />
                         ) : null}
                         <AvatarFallback className="bg-primary/10 text-sm font-medium text-primary">
-                          {(member.full_name || member.email || 'U')
-                            .charAt(0)
-                            .toUpperCase()}
+                          {displayInitial(member.full_name, 'U')}
                         </AvatarFallback>
                         {/* role+label so screen readers announce
                             presence — the hover tooltip alone isn't

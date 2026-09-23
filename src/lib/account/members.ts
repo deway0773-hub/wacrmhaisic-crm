@@ -26,7 +26,13 @@ export async function fetchAccountMembers(
   }
 }
 
-/** Display label for a member: full name → email → raw id. */
+/**
+ * Display label for a member: full name → raw id.
+ *
+ * The email is deliberately skipped — it holds the synthetic
+ * `<account>@local.fake` address, which is a login identifier and must
+ * never be rendered as a person's name.
+ */
 export function memberLabel(m: AccountMember): string {
-  return m.full_name || m.email || m.user_id;
+  return m.full_name || m.user_id;
 }

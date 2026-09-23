@@ -207,3 +207,45 @@ export function hydrateUserStore(): void {
     useUserStore.setState({ user: persisted });
   }
 }
+
+/**
+ * Resolve the name to render next to an avatar.
+ *
+ * Single source of truth for every surface (header, sidebar, settings
+ * overview, members roster). The order is deliberate:
+ *
+ *   1. `displayName` — the reactive store value, kept in step with the
+ *      profile row by `patchUser` in `use-auth`.
+ *   2. `fullName` — the authoritative `profiles.full_name` column.
+ *   3. `fallback` — an i18n string such as `t('defaultUser')`.
+ *
+ * The account name (`zhengjiabao`) and the synthetic email
+ * (`zhengjiabao@local.fake`) are **never** candidates: they are login
+ * identifiers, not names for humans. `stripFakeEmail` is applied to
+ * every candidate so a stray `@local.fake` value can't leak through.
+ */
+export function resolveDisplayName(
+  displayName: string | null | undefined,
+  fullName: string | null | undefined,
+  fallback: string,
+): string {
+  const candidates = [displayName, fullName];
+  for (const candidate of candidates) {
+    const value = stripFakeEmail(candidate);
+    if (value) return value;
+  }
+  return fallback;
+}
+
+/**
+ * First character of a display name, upper-cased, for an avatar
+ * fallback. Returns `fallback` (usually `'U'`) when the name is empty.
+ * Never derives the initial from an email address.
+ */
+export function displayInitial(
+  name: string | null | undefined,
+  fallback = 'U',
+): string {
+  const value = stripFakeEmail(name);
+  return value.charAt(0).toUpperCase() || fallback;
+}

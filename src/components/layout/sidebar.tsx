@@ -8,6 +8,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTotalUnread } from "@/hooks/use-total-unread";
 import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
 import {
+  displayInitial,
+  hydrateUserStore,
+  resolveDisplayName,
+  useUserStore,
+} from "@/store/user-store";
+import {
   Bell,
   Bot,
   GitBranch,
@@ -77,11 +83,24 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
   const totalUnread = useTotalUnread();
   const unreadNotifications = useUnreadNotifications();
 
+  // Reactive display identity — same source as the header, so a rename
+  // in Settings → Profile repaints both corners at once.
+  const storeUser = useUserStore((state) => state.user);
+  useEffect(() => {
+    hydrateUserStore();
+  }, []);
+
   // The footer shows exactly one identity: the signed-in user's name
   // and avatar. No email, no account name, no member list — anything
   // more read as "several logged-in users" in the bottom-left corner.
   // Account context lives in Settings → Overview instead.
-  const displayName = profile?.full_name ?? t("defaultUser");
+  const displayName = resolveDisplayName(
+    storeUser.displayName,
+    profile?.display_name || profile?.full_name,
+    t("defaultUser"),
+  );
+  const avatarUrl = storeUser.avatar ?? profile?.avatar_url ?? null;
+  const initial = displayInitial(displayName);
 
   // Close the drawer when route changes — users opened it to navigate,
   // so once they pick a destination the drawer should get out of the way.
@@ -249,16 +268,14 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
           <DropdownMenu>
             <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted/60 focus:bg-muted/60 focus:outline-none data-popup-open:bg-muted/60">
               <Avatar className="size-8 shrink-0">
-                {profile?.avatar_url ? (
+                {avatarUrl ? (
                   <AvatarImage
-                    src={profile.avatar_url}
-                    alt={profile.full_name ?? t("defaultAvatar")}
+                    src={avatarUrl}
+                    alt={displayName}
                   />
                 ) : null}
                 <AvatarFallback className="bg-primary/10 text-sm font-medium text-primary">
-                  {profile?.full_name?.charAt(0)?.toUpperCase() ??
-                    profile?.email?.charAt(0)?.toUpperCase() ??
-                    "U"}
+                  {initial}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">

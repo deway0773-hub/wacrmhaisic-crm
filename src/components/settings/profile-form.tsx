@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2, Upload, Trash2, CircleAlert } from 'lucide-react';
 
@@ -10,7 +11,7 @@ import {
   normalizeAccountToEmail,
   toDisplayAccount,
 } from '@/lib/auth/account-name';
-import { useUserStore } from '@/store/user-store';
+import { useUserStore, displayInitial } from '@/store/user-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,6 +42,7 @@ export function ProfileForm() {
   const setUser = useUserStore((state) => state.setUser);
   const storeUser = useUserStore((state) => state.user);
   const supabase = createClient();
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [fullName, setFullName] = useState('');
@@ -67,9 +69,9 @@ export function ProfileForm() {
   const currentAvatar =
     previewUrl ?? (!removeAvatar ? profile?.avatar_url ?? null : null);
 
-  const initial = (fullName || profile?.full_name || profile?.email || 'U')
-    .charAt(0)
-    .toUpperCase();
+  // 头像首字母只取显示名（如「小郑」→「小」）。账号名和
+  // `@local.fake` 邮箱是登录标识，绝不拿来当首字母。
+  const initial = displayInitial(fullName || profile?.display_name || profile?.full_name);
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = ''; // reset so the same file can be re-picked
@@ -177,6 +179,10 @@ export function ProfileForm() {
         displayName: trimmedName,
         avatar: nextAvatarUrl,
       });
+
+      // 让服务端渲染的页面（如设置页的标题/面包屑）也拿到新名字。
+      // store 已经让客户端组件即时重渲染，这里只是补齐 RSC 缓存。
+      router.refresh();
 
       toast.success(t('profileSaved'));
     } catch (err) {

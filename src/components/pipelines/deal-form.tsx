@@ -320,7 +320,7 @@ export function DealForm({
                 <option value="">{t("unassigned")}</option>
                 {profiles.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.full_name || p.email}
+                    {p.full_name}
                   </option>
                 ))}
               </select>

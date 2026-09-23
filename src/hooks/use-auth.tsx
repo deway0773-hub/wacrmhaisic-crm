@@ -25,6 +25,13 @@ import {
 interface Profile {
   id: string;
   full_name: string | null;
+  /**
+   * Explicit display name (migration 050). Kept in step with
+   * `full_name` by a DB trigger, so it is always populated for rows
+   * created after that migration. `full_name` remains the fallback
+   * for older deployments that haven't run it yet.
+   */
+  display_name: string | null;
   email: string;
   avatar_url: string | null;
   role: string | null;
@@ -143,6 +150,7 @@ function sleep(ms: number) {
 interface ProfileRow {
   id: string;
   full_name: string | null;
+  display_name: string | null;
   email: string;
   avatar_url: string | null;
   role: string | null;
@@ -189,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const result = await supabase
           .from("profiles")
           .select(
-            "id, full_name, email, avatar_url, role, beta_features, account_id, account_role",
+            "id, full_name, display_name, email, avatar_url, role, beta_features, account_id, account_role",
           )
           .eq("user_id", userId)
           .maybeSingle();
@@ -267,6 +275,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile({
           id: data.id,
           full_name: data.full_name,
+          display_name: data.display_name ?? null,
           email: data.email,
           avatar_url: data.avatar_url,
           role: data.role,
@@ -287,7 +296,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // fields are touched — `username`/`account` stay as the caller
         // set them.
         patchUser({
-          displayName: data.full_name ?? "",
+          displayName: data.display_name || data.full_name || "",
           avatar: data.avatar_url ?? null,
         });
 

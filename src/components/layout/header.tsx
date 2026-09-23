@@ -4,7 +4,12 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { hydrateUserStore, useUserStore } from "@/store/user-store";
+import {
+  displayInitial,
+  hydrateUserStore,
+  resolveDisplayName,
+  useUserStore,
+} from "@/store/user-store";
 import { LogOut, Menu, Settings as SettingsIcon, User } from "lucide-react";
 import {
   Avatar,
@@ -64,13 +69,17 @@ export function Header({ onOpenSidebar }: HeaderProps) {
     hydrateUserStore();
   }, []);
 
-  // 显示名只认用户资料里的 `full_name`（如「小郑」）。账号名
-  // （`zhengjiabao`）是登录标识，不是给人看的名字，绝不回退到它。
-  const displayName =
-    storeUser.displayName || profile?.full_name || t("defaultUser");
+  // 显示名统一走 `resolveDisplayName`：优先 store（资料保存后即时同步），
+  // 其次 `profiles.full_name`，最后才是 i18n 兜底文案。账号名
+  // （`zhengjiabao`）和 `@local.fake` 邮箱是登录标识，绝不参与显示。
+  const displayName = resolveDisplayName(
+    storeUser.displayName,
+    profile?.display_name || profile?.full_name,
+    t("defaultUser"),
+  );
   const avatarUrl = storeUser.avatar ?? profile?.avatar_url ?? null;
 
-  const initial = displayName.charAt(0)?.toUpperCase() ?? "U";
+  const initial = displayInitial(displayName);
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-4 lg:px-6">
