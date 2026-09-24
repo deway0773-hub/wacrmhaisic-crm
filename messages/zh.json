@@ -528,7 +528,9 @@
       "toastDeleteFailed": "无法删除该字段。",
       "toastDeleted": "已删除 “{name}”。",
       "toastOrphanFields": "发现 {count} 个未关联到当前账户的字段（account_id 为空或不匹配），已一并显示。请检查数据。",
-      "toastRealtimeUnavailable": "实时同步不可用，字段列表仍可正常查看。请在 Supabase 后台开启 Realtime。"
+      "toastRealtimeUnavailable": "实时同步不可用，字段列表仍可正常查看。请在 Supabase 后台开启 Realtime。",
+      "errorTitle": "自定义字段加载出错",
+      "errorRetry": "重试"
     }
   },
   "Pipelines": {

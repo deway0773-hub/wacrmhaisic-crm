@@ -528,7 +528,9 @@
       "toastDeleteFailed": "Could not delete field.",
       "toastDeleted": "Deleted \"{name}\".",
       "toastOrphanFields": "Found {count} field(s) not linked to this account (null or mismatched account_id). Showing them anyway — please review the data.",
-      "toastRealtimeUnavailable": "Live sync is unavailable, but the field list is still shown. Enable Realtime for this table in Supabase."
+      "toastRealtimeUnavailable": "Live sync is unavailable, but the field list is still shown. Enable Realtime for this table in Supabase.",
+      "errorTitle": "Could not load custom fields",
+      "errorRetry": "Try again"
     }
   },
   "Pipelines": {

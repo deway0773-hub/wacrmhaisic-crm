@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Component, useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { createClient, isRealtimeHealthy, describeRealtimeStatus } from '@/lib/supabase/client';
 import type { RealtimeStatus } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -58,9 +59,70 @@ export function CustomFieldsManager({
             {t('desc')}
           </DialogDescription>
         </DialogHeader>
-        <CustomFieldsPanel onFieldsChanged={onFieldsChanged} />
+        {/* A render-time throw inside the panel must not take the whole
+            route down to the Next.js error page — contain it here and
+            show the message inline instead. */}
+        <CustomFieldsErrorBoundary>
+          <CustomFieldsPanel onFieldsChanged={onFieldsChanged} />
+        </CustomFieldsErrorBoundary>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Local error boundary for the custom-fields UI. Mirrors the pattern used by
+ * `flow-canvas.tsx`: catch the render error, log it, and render a small
+ * inline fallback with a retry button rather than letting the exception
+ * bubble up to the route-level error boundary.
+ */
+class CustomFieldsErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean; message: string }
+> {
+  state = { hasError: false, message: '' };
+
+  static getDerivedStateFromError(error: unknown) {
+    return {
+      hasError: true,
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+
+  componentDidCatch(error: unknown) {
+    // eslint-disable-next-line no-console
+    console.error('[custom-fields] render error', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <CustomFieldsFallback
+          message={this.state.message}
+          onReset={() => this.setState({ hasError: false, message: '' })}
+        />
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function CustomFieldsFallback({
+  message,
+  onReset,
+}: {
+  message: string;
+  onReset: () => void;
+}) {
+  const t = useTranslations('Contacts.customFields');
+  return (
+    <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/5 p-4">
+      <p className="text-sm font-medium text-destructive">{t('errorTitle')}</p>
+      <p className="text-xs break-words text-muted-foreground">{message}</p>
+      <Button variant="outline" size="sm" onClick={onReset}>
+        {t('errorRetry')}
+      </Button>
+    </div>
   );
 }
 
@@ -93,44 +155,55 @@ export function CustomFieldsPanel({
   const realtimeWarned = useRef(false);
 
   const fetchFields = useCallback(async () => {
-    console.log('accountId', accountId);
-    if (!accountId) return;
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('custom_fields')
-      .select('*')
-      .eq('account_id', accountId)
-      .order('field_name');
-    if (error) {
-      toast.error(error.message);
-      setLoading(false);
+    if (!accountId) {
+      console.warn('[custom_fields] no accountId yet — skipping fetch');
       return;
     }
-    let rows = (data as CustomField[] | null) ?? [];
-
-    // Fallback: if the account-scoped query came back empty, look for
-    // rows with a NULL / mismatched account_id (legacy dirty data) so
-    // the user can see them instead of a misleading "no fields yet".
-    if (rows.length === 0) {
-      const { data: allData, error: allError } = await supabase
-        .from('custom_fields')
-        .select('*')
-        .order('field_name');
-      if (allError) {
-        toast.error(allError.message);
-        setLoading(false);
+    setLoading(true);
+    try {
+      // Build the query conditionally: only scope by account_id when we
+      // actually have one, so a null account can never produce
+      // `account_id=eq.null` (which returns nothing and looks like an
+      // empty catalogue).
+      let query = supabase.from('custom_fields').select('*');
+      if (accountId) query = query.eq('account_id', accountId);
+      const { data, error } = await query.order('field_name');
+      if (error) {
+        toast.error(error.message);
         return;
       }
-      const all = (allData as CustomField[] | null) ?? [];
-      const orphans = all.filter((f) => f.account_id !== accountId);
-      if (orphans.length > 0) {
-        toast.warning(t('toastOrphanFields', { count: orphans.length }));
-        rows = all;
-      }
-    }
+      let rows = (data as CustomField[] | null) ?? [];
 
-    setFields(rows);
-    setLoading(false);
+      // Fallback: if the account-scoped query came back empty, look for
+      // rows with a NULL / mismatched account_id (legacy dirty data) so
+      // the user can see them instead of a misleading "no fields yet".
+      if (rows.length === 0) {
+        const { data: allData, error: allError } = await supabase
+          .from('custom_fields')
+          .select('*')
+          .order('field_name');
+        if (allError) {
+          toast.error(allError.message);
+          return;
+        }
+        const all = (allData as CustomField[] | null) ?? [];
+        const orphans = all.filter((f) => f.account_id !== accountId);
+        if (orphans.length > 0) {
+          toast.warning(t('toastOrphanFields', { count: orphans.length }));
+          rows = all;
+        }
+      }
+
+      setFields(rows);
+    } catch (e) {
+      // Never let a fetch failure bubble up as an unhandled rejection —
+      // that would take the whole route down to the error page.
+      const message = e instanceof Error ? e.message : String(e);
+      console.error('[custom_fields] fetch failed', e);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   }, [supabase, accountId, t]);
 
   // Load the field list on mount once the account is known. The setters
@@ -149,37 +222,43 @@ export function CustomFieldsPanel({
   useEffect(() => {
     if (!accountId) return;
 
-    const channel = supabase
-      .channel(`custom_fields:${accountId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'custom_fields',
-          filter: `account_id=eq.${accountId}`,
-        },
-        () => {
-          void fetchFields();
-        }
-      )
-      .subscribe((status) => {
-        const realtimeStatus = status as RealtimeStatus;
-        console.log('[custom_fields] realtime status:', realtimeStatus);
-        if (isRealtimeHealthy(realtimeStatus)) {
-          realtimeWarned.current = false;
-          return;
-        }
-        if (realtimeWarned.current) return;
-        realtimeWarned.current = true;
-        console.warn(
-          `[custom_fields] realtime unavailable (${realtimeStatus}): ${describeRealtimeStatus(realtimeStatus)}`
-        );
-        toast.warning(t('toastRealtimeUnavailable'));
-      });
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      channel = supabase
+        .channel(`custom_fields:${accountId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'custom_fields',
+            filter: `account_id=eq.${accountId}`,
+          },
+          () => {
+            void fetchFields();
+          }
+        )
+        .subscribe((status) => {
+          const realtimeStatus = status as RealtimeStatus;
+          console.log('[custom_fields] realtime status:', realtimeStatus);
+          if (isRealtimeHealthy(realtimeStatus)) {
+            realtimeWarned.current = false;
+            return;
+          }
+          if (realtimeWarned.current) return;
+          realtimeWarned.current = true;
+          console.warn(
+            `[custom_fields] realtime unavailable (${realtimeStatus}): ${describeRealtimeStatus(realtimeStatus)}`
+          );
+          toast.warning(t('toastRealtimeUnavailable'));
+        });
+    } catch (e) {
+      // Realtime is optional — a setup failure must not break the panel.
+      console.warn('[custom_fields] realtime setup failed', e);
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [supabase, accountId, fetchFields, t]);
 
